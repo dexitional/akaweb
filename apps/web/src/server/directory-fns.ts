@@ -13,11 +13,22 @@ const RESULT_LIMITS = { people: 200, units: 50, categories: 12, expertise: 20 };
 
 export const getDirectorySearchData = createServerFn({ method: "GET" })
   .validator((input: { q?: string; initial?: string }) => ({
-    q: z.string().max(100).catch("").parse(input.q ?? "").trim(),
-    initial: z.string().regex(/^[A-Z]$/).optional().catch(undefined).parse(input.initial?.toUpperCase()),
+    q: z
+      .string()
+      .max(100)
+      .catch("")
+      .parse(input.q ?? "")
+      .trim(),
+    initial: z
+      .string()
+      .regex(/^[A-Z]$/)
+      .optional()
+      .catch(undefined)
+      .parse(input.initial?.toUpperCase()),
   }))
   .handler(async ({ data }) => {
-    const { getDirectoryStats, getStaffByInitial, searchDirectory } = await import("./directory.js");
+    const { getDirectoryStats, getStaffByInitial, searchDirectory } =
+      await import("./directory.js");
     const empty = { people: [], units: [], categories: [], expertise: [] };
     const [stats, results] = await Promise.all([
       getDirectoryStats(),
@@ -62,7 +73,10 @@ export const getContactsData = createServerFn({ method: "GET" }).handler(async (
 
 export const getMostVisitedData = createServerFn({ method: "GET" })
   .validator((input: { period?: string }) => ({
-    period: z.enum(["today", "week", "month", "year"]).catch("week").parse(input.period ?? "week"),
+    period: z
+      .enum(["today", "week", "month", "year"])
+      .catch("week")
+      .parse(input.period ?? "week"),
   }))
   .handler(async ({ data }) => {
     const { getMostVisited } = await import("./directory.js");

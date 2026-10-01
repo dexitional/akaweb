@@ -27,7 +27,10 @@ export async function listUsers() {
 }
 
 async function getUser(id: number) {
-  const [rows] = await getPool().execute<RowDataPacket[]>(`SELECT ${COLUMNS} FROM admins WHERE id = ?`, [id]);
+  const [rows] = await getPool().execute<RowDataPacket[]>(
+    `SELECT ${COLUMNS} FROM admins WHERE id = ?`,
+    [id],
+  );
   if (!rows[0]) throw new AppError("User not found.", 404);
   return rows[0];
 }
@@ -42,8 +45,16 @@ async function assertEmailFree(email: string, excludeId?: number) {
 
 export async function createUser(actorId: number, input: z.infer<typeof createUserSchema>) {
   await assertEmailFree(input.email);
-  const id = await insertRow("admins", input, FIELDS, { password_hash: await bcrypt.hash(input.password, 12) });
-  logActivity(actorId, "created", "user", id, `Created ${input.role.replace("_", " ")} account for ${input.fullName}`);
+  const id = await insertRow("admins", input, FIELDS, {
+    password_hash: await bcrypt.hash(input.password, 12),
+  });
+  logActivity(
+    actorId,
+    "created",
+    "user",
+    id,
+    `Created ${input.role.replace("_", " ")} account for ${input.fullName}`,
+  );
   return getUser(id);
 }
 
@@ -59,12 +70,19 @@ async function assertNotLastSuperAdmin(id: number) {
   }
 }
 
-export async function updateUser(actorId: number, id: number, input: z.infer<typeof updateUserSchema>) {
+export async function updateUser(
+  actorId: number,
+  id: number,
+  input: z.infer<typeof updateUserSchema>,
+) {
   const current = await findById<{ role: string; full_name: string }>("admins", id, "User");
   if (input.email) await assertEmailFree(input.email, id);
-  const demoting = current.role === "super_admin" && input.role !== undefined && input.role !== "super_admin";
-  if (demoting || (current.role === "super_admin" && input.isActive === false)) await assertNotLastSuperAdmin(id);
-  if (id === actorId && input.isActive === false) throw new AppError("You can't deactivate your own account.", 409);
+  const demoting =
+    current.role === "super_admin" && input.role !== undefined && input.role !== "super_admin";
+  if (demoting || (current.role === "super_admin" && input.isActive === false))
+    await assertNotLastSuperAdmin(id);
+  if (id === actorId && input.isActive === false)
+    throw new AppError("You can't deactivate your own account.", 409);
 
   const extra: Record<string, string | number | null> = {};
   if (input.password) {
@@ -73,7 +91,13 @@ export async function updateUser(actorId: number, id: number, input: z.infer<typ
     extra.locked_until = null;
   }
   await updateRow("admins", id, input, FIELDS, extra);
-  logActivity(actorId, "updated", "user", id, `Updated account for ${input.fullName ?? current.full_name}${input.password ? " (password reset)" : ""}`);
+  logActivity(
+    actorId,
+    "updated",
+    "user",
+    id,
+    `Updated account for ${input.fullName ?? current.full_name}${input.password ? " (password reset)" : ""}`,
+  );
   return getUser(id);
 }
 

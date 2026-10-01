@@ -40,34 +40,64 @@ export async function getPage(id: number) {
   return { ...page, body: toRichHtml(page.body), blocks: page.blocks ?? [] };
 }
 
-async function resolveSlug(section: string, title: string, slug: string | undefined, excludeId?: number) {
+async function resolveSlug(
+  section: string,
+  title: string,
+  slug: string | undefined,
+  excludeId?: number,
+) {
   if (!slug) return uniqueSlug("pages", title, { column: "section", value: section }, excludeId);
   const free = await uniqueSlug("pages", slug, { column: "section", value: section }, excludeId);
-  if (free !== slugify(slug)) throw new AppError(`Another page in this section already uses the address “${slug}”.`, 409);
+  if (free !== slugify(slug))
+    throw new AppError(`Another page in this section already uses the address “${slug}”.`, 409);
   return free;
 }
 
 export async function createPage(adminId: number, input: z.infer<typeof createPageSchema>) {
   const slug = await resolveSlug(input.section, input.title, input.slug);
-  const extra: Record<string, string | number | null> = { created_by: adminId, updated_by: adminId };
+  const extra: Record<string, string | number | null> = {
+    created_by: adminId,
+    updated_by: adminId,
+  };
   if (input.status === "published") extra.published_at = sqlNow();
   const id = await insertRow("pages", { blocks: [], ...input, slug }, FIELDS, extra);
-  logActivity(adminId, input.status === "published" ? "published" : "created", "page", id, `Created page “${input.title}”`);
+  logActivity(
+    adminId,
+    input.status === "published" ? "published" : "created",
+    "page",
+    id,
+    `Created page “${input.title}”`,
+  );
   return getPage(id);
 }
 
-export async function updatePage(adminId: number, id: number, input: z.infer<typeof updatePageSchema>) {
+export async function updatePage(
+  adminId: number,
+  id: number,
+  input: z.infer<typeof updatePageSchema>,
+) {
   const current = await findById<PageRow>("pages", id, "Page");
   const section = input.section ?? current.section;
   const patch = { ...input };
   if (input.slug !== undefined || input.section !== undefined) {
-    patch.slug = await resolveSlug(section, input.title ?? current.title, input.slug || current.slug, id);
+    patch.slug = await resolveSlug(
+      section,
+      input.title ?? current.title,
+      input.slug || current.slug,
+      id,
+    );
   }
   const extra: Record<string, string | number | null> = { updated_by: adminId };
   const publishing = input.status === "published" && current.status !== "published";
   if (publishing && !current.published_at) extra.published_at = sqlNow();
   await updateRow("pages", id, patch, FIELDS, extra);
-  logActivity(adminId, publishing ? "published" : "updated", "page", id, `${publishing ? "Published" : "Updated"} page “${input.title ?? current.title}”`);
+  logActivity(
+    adminId,
+    publishing ? "published" : "updated",
+    "page",
+    id,
+    `${publishing ? "Published" : "Updated"} page “${input.title ?? current.title}”`,
+  );
   return getPage(id);
 }
 

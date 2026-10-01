@@ -14,18 +14,22 @@ export function slugify(input: string) {
   );
 }
 
-// First free slug in a table's scope: "orientation", "orientation-2", ...
+// First free slug in a table's scope ("orientation", "orientation-2", ...);
+// a null scope means unique across the whole table.
 // `table`/`scopeColumn` come only from fixed call sites, never user input.
 export async function uniqueSlug(
   table: "pages" | "posts" | "departments",
   base: string,
-  scope: { column: "section" | "type" | "kind"; value: string },
+  scope: { column: "section" | "type" | "kind"; value: string } | null,
   excludeId?: number,
 ) {
   const root = slugify(base);
+  const params: Array<string | number> = [root, `${root}-%`];
+  if (scope) params.unshift(scope.value);
+  if (excludeId) params.push(excludeId);
   const [rows] = await getPool().query<RowDataPacket[]>(
-    `SELECT slug FROM ${table} WHERE ${scope.column} = ? AND (slug = ? OR slug LIKE ?) ${excludeId ? "AND id <> ?" : ""}`,
-    excludeId ? [scope.value, root, `${root}-%`, excludeId] : [scope.value, root, `${root}-%`],
+    `SELECT slug FROM ${table} WHERE ${scope ? `${scope.column} = ? AND` : ""} (slug = ? OR slug LIKE ?) ${excludeId ? "AND id <> ?" : ""}`,
+    params,
   );
   const taken = new Set(rows.map((r) => r.slug as string));
   if (!taken.has(root)) return root;

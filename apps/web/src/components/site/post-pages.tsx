@@ -17,7 +17,14 @@ import {
 } from "lucide-react";
 import type { PostRow, PostType } from "@aka/db";
 import { postTypeDef } from "#/lib/content";
-import { formatDate, formatEventRange, formatLongDate, formatTime, hasTime, readingMinutes } from "#/lib/format";
+import {
+  formatDate,
+  formatEventRange,
+  formatLongDate,
+  formatTime,
+  hasTime,
+  readingMinutes,
+} from "#/lib/format";
 import { cn } from "#/lib/utils";
 import type { PostCard } from "#/server/content";
 import { PageHero } from "./page-hero";
@@ -51,7 +58,12 @@ export function PostListingPage({
 }: {
   type: PostType;
   search: PostListSearch;
-  data: { items: Array<PostCard>; total: number; pageSize: number; categories: Array<{ name: string; count: number }> };
+  data: {
+    items: Array<PostCard>;
+    total: number;
+    pageSize: number;
+    categories: Array<{ name: string; count: number }>;
+  };
 }) {
   const def = postTypeDef(type);
   const path = def.path as ListPath;
@@ -66,17 +78,28 @@ export function PostListingPage({
   const chip = (active: boolean) =>
     cn(
       "shrink-0 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap transition-colors",
-      active ? "bg-primary text-white" : "border border-border bg-white text-slate-700 hover:border-primary/40 hover:text-primary",
+      active
+        ? "bg-primary text-white"
+        : "border border-border bg-white text-slate-700 hover:border-primary/40 hover:text-primary",
     );
 
   return (
     <>
-      <PageHero eyebrow="News & Media" title={def.label} summary={INTROS[type]} crumbs={[{ label: "News & Media", href: "/news" }, { label: def.label }]} compact>
+      <PageHero
+        eyebrow="News & Media"
+        title={def.label}
+        summary={INTROS[type]}
+        crumbs={[{ label: "News & Media", href: "/news" }, { label: def.label }]}
+        compact
+      >
         <form
           role="search"
           onSubmit={(e) => {
             e.preventDefault();
-            void navigate({ to: path, search: { ...search, q: q.trim() || undefined, page: undefined } });
+            void navigate({
+              to: path,
+              search: { ...search, q: q.trim() || undefined, page: undefined },
+            });
           }}
           className="mt-8 flex max-w-xl items-center gap-2 rounded-full bg-white p-1.5 pl-5 shadow-lg"
         >
@@ -88,7 +111,10 @@ export function PostListingPage({
             aria-label={`Search ${def.label.toLowerCase()}`}
             className="min-w-0 flex-1 bg-transparent py-2 text-[15px] text-slate-900 outline-none placeholder:text-slate-400"
           />
-          <button type="submit" className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark">
+          <button
+            type="submit"
+            className="rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark"
+          >
             Search
           </button>
         </form>
@@ -97,7 +123,11 @@ export function PostListingPage({
       <div className="mx-auto max-w-7xl px-4 py-12 md:px-8 md:py-16">
         <div className="mb-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           {type === "event" && (
-            <div className="flex gap-1 rounded-full bg-secondary p-1" role="tablist" aria-label="Event timing">
+            <div
+              className="flex gap-1 rounded-full bg-secondary p-1"
+              role="tablist"
+              aria-label="Event timing"
+            >
               {(["upcoming", "past"] as const).map((w) => (
                 <Link
                   key={w}
@@ -107,7 +137,9 @@ export function PostListingPage({
                   aria-selected={when === w}
                   className={cn(
                     "rounded-full px-5 py-2 text-sm font-semibold capitalize transition-colors",
-                    when === w ? "bg-white text-primary shadow-sm" : "text-slate-600 hover:text-primary",
+                    when === w
+                      ? "bg-white text-primary shadow-sm"
+                      : "text-slate-600 hover:text-primary",
                   )}
                 >
                   {w}
@@ -117,7 +149,11 @@ export function PostListingPage({
           )}
           {data.categories.length > 0 && (
             <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 lg:mx-0 lg:flex-wrap lg:px-0">
-              <Link to={path} search={{ ...search, category: undefined, page: undefined }} className={chip(!search.category)}>
+              <Link
+                to={path}
+                search={{ ...search, category: undefined, page: undefined }}
+                className={chip(!search.category)}
+              >
                 All
               </Link>
               {data.categories.map((c) => (
@@ -141,7 +177,11 @@ export function PostListingPage({
             {search.q && <> for “{search.q}”</>}
             {search.category && <> in {search.category}</>}
             {" · "}
-            <Link to={path} search={{ when: search.when }} className="font-semibold text-primary hover:underline">
+            <Link
+              to={path}
+              search={{ when: search.when }}
+              className="font-semibold text-primary hover:underline"
+            >
               Clear filters
             </Link>
           </p>
@@ -149,8 +189,18 @@ export function PostListingPage({
 
         {data.items.length === 0 ? (
           <EmptyState
-            title={filtered ? "Nothing matches your search" : type === "event" && when === "upcoming" ? "No upcoming events yet" : `No ${def.label.toLowerCase()} yet`}
-            text={type === "event" && when === "upcoming" ? "Check back soon, or browse past events." : "Please check back soon."}
+            title={
+              filtered
+                ? "Nothing matches your search"
+                : type === "event" && when === "upcoming"
+                  ? "No upcoming events yet"
+                  : `No ${def.label.toLowerCase()} yet`
+            }
+            text={
+              type === "event" && when === "upcoming"
+                ? "Check back soon, or browse past events."
+                : "Please check back soon."
+            }
           />
         ) : type === "announcement" ? (
           <div className="grid gap-4 md:grid-cols-2">
@@ -161,7 +211,11 @@ export function PostListingPage({
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {data.items.map((post) =>
-              type === "event" ? <EventCard key={post.id} post={post} /> : <NewsCard key={post.id} post={post} />,
+              type === "event" ? (
+                <EventCard key={post.id} post={post} />
+              ) : (
+                <NewsCard key={post.id} post={post} />
+              ),
             )}
           </div>
         )}
@@ -192,7 +246,11 @@ export function PostDetailPage({ post, related }: { post: FullPost; related: Arr
         eyebrow={post.category ?? def.singular}
         title={post.title}
         summary={post.excerpt}
-        crumbs={[{ label: "News & Media", href: "/news" }, { label: def.label, href: def.path }, { label: post.title }]}
+        crumbs={[
+          { label: "News & Media", href: "/news" },
+          { label: def.label, href: def.path },
+          { label: post.title },
+        ]}
         compact
       >
         <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/80">
@@ -239,7 +297,13 @@ export function PostDetailPage({ post, related }: { post: FullPost; related: Arr
       <div className="mx-auto grid max-w-7xl gap-12 px-4 py-12 md:px-8 md:py-16 lg:grid-cols-[minmax(0,1fr)_300px]">
         <article className="min-w-0">
           {post.cover_image_url && (
-            <CoverImage src={post.cover_image_url} alt="" eager className="mb-10 aspect-[16/9] rounded-3xl shadow-lg" />
+            <CoverImage
+              src={post.cover_image_url}
+              alt=""
+              eager
+              sizes="(min-width: 896px) 896px, 100vw"
+              className="mb-10 aspect-[16/9] rounded-3xl shadow-lg"
+            />
           )}
           {post.body ? (
             <RichContent html={post.body} className="prose-lg" />
@@ -249,7 +313,10 @@ export function PostDetailPage({ post, related }: { post: FullPost; related: Arr
           {post.tags.length > 0 && (
             <ul className="mt-10 flex flex-wrap gap-2 border-t border-border pt-6">
               {post.tags.map((tag) => (
-                <li key={tag} className="rounded-full bg-secondary px-3 py-1 text-sm font-medium text-primary">
+                <li
+                  key={tag}
+                  className="rounded-full bg-secondary px-3 py-1 text-sm font-medium text-primary"
+                >
                   #{tag}
                 </li>
               ))}
@@ -268,10 +335,14 @@ export function PostDetailPage({ post, related }: { post: FullPost; related: Arr
         <aside className="space-y-6">
           {isEvent && (
             <div className="overflow-hidden rounded-2xl border border-border bg-white">
-              <div className="bg-primary px-5 py-3 text-xs font-bold tracking-[0.14em] text-brand-sky uppercase">Event details</div>
+              <div className="bg-primary px-5 py-3 text-xs font-bold tracking-[0.14em] text-brand-sky uppercase">
+                Event details
+              </div>
               <dl className="space-y-4 p-5 text-sm">
                 <div>
-                  <dt className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Date</dt>
+                  <dt className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                    Date
+                  </dt>
                   <dd className="mt-1 font-semibold text-slate-900">{formatLongDate(start)}</dd>
                   {post.event_end && post.event_end.slice(0, 10) !== start.slice(0, 10) && (
                     <dd className="text-slate-700">to {formatLongDate(post.event_end)}</dd>
@@ -279,16 +350,22 @@ export function PostDetailPage({ post, related }: { post: FullPost; related: Arr
                 </div>
                 {hasTime(start) && (
                   <div>
-                    <dt className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Time</dt>
+                    <dt className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                      Time
+                    </dt>
                     <dd className="mt-1 font-semibold text-slate-900">
                       {formatTime(start)}
-                      {post.event_end && hasTime(post.event_end) && ` – ${formatTime(post.event_end)}`}
+                      {post.event_end &&
+                        hasTime(post.event_end) &&
+                        ` – ${formatTime(post.event_end)}`}
                     </dd>
                   </div>
                 )}
                 {post.venue && (
                   <div>
-                    <dt className="text-xs font-bold tracking-wider text-muted-foreground uppercase">Venue</dt>
+                    <dt className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                      Venue
+                    </dt>
                     <dd className="mt-1 font-semibold text-slate-900">{post.venue}</dd>
                   </div>
                 )}
@@ -337,16 +414,29 @@ export function PostDetailPage({ post, related }: { post: FullPost; related: Arr
 
           {related.length > 0 && (
             <div>
-              <p className="mb-3 text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">More {def.label.toLowerCase()}</p>
+              <p className="mb-3 text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">
+                More {def.label.toLowerCase()}
+              </p>
               <ul className="space-y-3">
                 {related.map((r) => (
                   <li key={r.id}>
-                    <SmartLink href={`${def.path}/${r.slug}`} className="group flex gap-3 rounded-xl p-2 transition-colors hover:bg-secondary">
-                      <CoverImage src={r.cover_image_url} className="size-16 shrink-0 rounded-lg" />
+                    <SmartLink
+                      href={`${def.path}/${r.slug}`}
+                      className="group flex gap-3 rounded-xl p-2 transition-colors hover:bg-secondary"
+                    >
+                      <CoverImage
+                        src={r.cover_image_url}
+                        sizes="64px"
+                        className="size-16 shrink-0 rounded-lg"
+                      />
                       <span className="min-w-0">
-                        <span className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-primary">{r.title}</span>
+                        <span className="line-clamp-2 text-sm font-semibold text-slate-900 group-hover:text-primary">
+                          {r.title}
+                        </span>
                         <span className="mt-1 block text-xs text-muted-foreground">
-                          {formatDate(r.type === "event" ? (r.event_start ?? r.published_at) : r.published_at)}
+                          {formatDate(
+                            r.type === "event" ? (r.event_start ?? r.published_at) : r.published_at,
+                          )}
                         </span>
                       </span>
                     </SmartLink>

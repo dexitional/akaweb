@@ -7,9 +7,23 @@ import type { DepartmentKind } from "@aka/db";
 import { api } from "#/lib/api-client";
 import { DEPARTMENT_KINDS } from "#/lib/content";
 import { canManage } from "#/lib/permissions";
-import { AdminPageHeader, ConfirmDialog, Segmented, StatusPill, TableMessage, errorToast } from "#/components/admin/ui";
+import {
+  AdminPageHeader,
+  ConfirmDialog,
+  Segmented,
+  StatusPill,
+  TableMessage,
+  errorToast,
+} from "#/components/admin/ui";
 import { Button } from "#/components/ui/button.tsx";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#/components/ui/table.tsx";
 
 export const Route = createFileRoute("/admin/_admin/departments/")({
   component: DepartmentsList,
@@ -80,7 +94,11 @@ function DepartmentsList() {
         actions={
           canEdit && (
             <Button asChild>
-              <Link to="/admin/departments/$departmentId" params={{ departmentId: "new" }} search={{ kind }}>
+              <Link
+                to="/admin/departments/$departmentId"
+                params={{ departmentId: "new" }}
+                search={{ kind }}
+              >
                 <Plus /> New {meta.label.toLowerCase()}
               </Link>
             </Button>
@@ -91,7 +109,11 @@ function DepartmentsList() {
         value={kind}
         onChange={setKind}
         options={[
-          { value: "department", label: "Academic departments", count: all.filter((d) => d.kind === "department").length },
+          {
+            value: "department",
+            label: "Academic departments",
+            count: all.filter((d) => d.kind === "department").length,
+          },
           { value: "unit", label: "Units", count: all.filter((d) => d.kind === "unit").length },
         ]}
       />
@@ -113,31 +135,55 @@ function DepartmentsList() {
                 {canEdit && (
                   <TableCell>
                     <div className="flex">
-                      <Button variant="ghost" size="icon-xs" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        disabled={i === 0}
+                        onClick={() => move(i, -1)}
+                        aria-label="Move up"
+                      >
                         <ArrowUp />
                       </Button>
-                      <Button variant="ghost" size="icon-xs" disabled={i === items.length - 1} onClick={() => move(i, 1)} aria-label="Move down">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        disabled={i === items.length - 1}
+                        onClick={() => move(i, 1)}
+                        aria-label="Move down"
+                      >
                         <ArrowDown />
                       </Button>
                     </div>
                   </TableCell>
                 )}
                 <TableCell className="max-w-md">
-                  <Link to="/admin/departments/$departmentId" params={{ departmentId: String(d.id) }} className="flex items-center gap-3 hover:text-primary">
+                  <Link
+                    to="/admin/departments/$departmentId"
+                    params={{ departmentId: String(d.id) }}
+                    className="flex items-center gap-3 hover:text-primary"
+                  >
                     {d.image_url ? (
-                      <img src={d.image_url} alt="" className="size-10 shrink-0 rounded-md object-cover" />
+                      <img
+                        src={d.image_url}
+                        alt=""
+                        className="size-10 shrink-0 rounded-md object-cover"
+                      />
                     ) : (
                       <span className="size-10 shrink-0 rounded-md bg-gradient-to-br from-primary to-brand-green" />
                     )}
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{d.name}</span>
-                      <span className="block truncate text-xs text-muted-foreground">{d.programme_count} programmes</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {d.programme_count} programmes
+                      </span>
                     </span>
                   </Link>
                 </TableCell>
                 <TableCell className="text-sm">
                   {d.head_name ?? <span className="text-muted-foreground italic">Not set</span>}
-                  {d.head_title && <span className="block text-xs text-muted-foreground">{d.head_title}</span>}
+                  {d.head_title && (
+                    <span className="block text-xs text-muted-foreground">{d.head_title}</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
@@ -145,7 +191,10 @@ function DepartmentsList() {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <StatusPill status={d.is_published ? "published" : "hidden"} label={d.is_published ? "Published" : "Hidden"} />
+                  <StatusPill
+                    status={d.is_published ? "published" : "hidden"}
+                    label={d.is_published ? "Published" : "Hidden"}
+                  />
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">
@@ -157,11 +206,20 @@ function DepartmentsList() {
                     {canEdit && (
                       <>
                         <Button asChild variant="ghost" size="icon-sm" aria-label="Edit">
-                          <Link to="/admin/departments/$departmentId" params={{ departmentId: String(d.id) }}>
+                          <Link
+                            to="/admin/departments/$departmentId"
+                            params={{ departmentId: String(d.id) }}
+                          >
                             <Pencil />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleting(d)} aria-label="Delete">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive"
+                          onClick={() => setDeleting(d)}
+                          aria-label="Delete"
+                        >
                           <Trash2 />
                         </Button>
                       </>
@@ -173,7 +231,9 @@ function DepartmentsList() {
           </TableBody>
         </Table>
         {isLoading && <TableMessage>Loading…</TableMessage>}
-        {!isLoading && items.length === 0 && <TableMessage>No {meta.plural.toLowerCase()} yet.</TableMessage>}
+        {!isLoading && items.length === 0 && (
+          <TableMessage>No {meta.plural.toLowerCase()} yet.</TableMessage>
+        )}
       </div>
       <ConfirmDialog
         open={deleting !== null}

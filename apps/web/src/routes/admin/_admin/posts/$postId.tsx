@@ -9,7 +9,14 @@ import { api } from "#/lib/api-client";
 import { postTypeDef } from "#/lib/content";
 import { canPublishPosts } from "#/lib/permissions";
 import { formatDateTime, fromInputDateTime, nowInputDateTime, toInputDateTime } from "#/lib/format";
-import { AdminPageHeader, Field, Panel, StatusPill, Switch, errorToast } from "#/components/admin/ui";
+import {
+  AdminPageHeader,
+  Field,
+  Panel,
+  StatusPill,
+  Switch,
+  errorToast,
+} from "#/components/admin/ui";
 import { RichTextEditor } from "#/components/admin/rich-text-editor";
 import { FileField, ImageField } from "#/components/admin/media-fields";
 import { LinkField } from "#/components/admin/block-editor";
@@ -18,7 +25,9 @@ import { Input } from "#/components/ui/input.tsx";
 import { Textarea } from "#/components/ui/textarea.tsx";
 
 export const Route = createFileRoute("/admin/_admin/posts/$postId")({
-  validateSearch: z.object({ type: z.enum(["news", "event", "announcement"]).optional().catch(undefined) }),
+  validateSearch: z.object({
+    type: z.enum(["news", "event", "announcement"]).optional().catch(undefined),
+  }),
   component: PostEditorRoute,
 });
 
@@ -102,10 +111,19 @@ function PostEditorRoute() {
   return <PostEditor key={postId} type={type} post={data ?? null} initial={initial} />;
 }
 
-function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | null; initial: Form }) {
+function PostEditor({
+  type,
+  post,
+  initial,
+}: {
+  type: PostType;
+  post: FullPost | null;
+  initial: Form;
+}) {
   const { admin } = Route.useRouteContext();
   const publisher = canPublishPosts(admin.role);
-  const locked = !publisher && post !== null && (post.author_id !== admin.id || post.status !== "draft");
+  const locked =
+    !publisher && post !== null && (post.author_id !== admin.id || post.status !== "draft");
   const def = postTypeDef(type);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -117,7 +135,10 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
   const bypassBlock = useRef(false);
 
   useBlocker({
-    shouldBlockFn: () => !bypassBlock.current && dirty && !window.confirm("You have unsaved changes. Leave without saving?"),
+    shouldBlockFn: () =>
+      !bypassBlock.current &&
+      dirty &&
+      !window.confirm("You have unsaved changes. Leave without saving?"),
     enableBeforeUnload: () => dirty,
   });
 
@@ -141,7 +162,9 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
         attachmentUrl: form.attachmentUrl,
         expiresOn: form.expiresOn,
       };
-      return post ? api.patch<{ post: FullPost }>(`/posts/${post.id}`, body) : api.post<{ post: FullPost }>("/posts", { ...body, type });
+      return post
+        ? api.patch<{ post: FullPost }>(`/posts/${post.id}`, body)
+        : api.post<{ post: FullPost }>("/posts", { ...body, type });
     },
     onSuccess: ({ post: savedPost }) => {
       const next = toForm(savedPost);
@@ -152,7 +175,11 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
       toast.success(savedPost.status === "published" ? "Published." : "Saved.");
       if (!post) {
         bypassBlock.current = true;
-        void navigate({ to: "/admin/posts/$postId", params: { postId: String(savedPost.id) }, replace: true });
+        void navigate({
+          to: "/admin/posts/$postId",
+          params: { postId: String(savedPost.id) },
+          replace: true,
+        });
       }
     },
     onError: errorToast("Couldn't save."),
@@ -173,7 +200,8 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
 
   const addTag = () => {
     const tag = tagInput.trim().replace(/^#/, "");
-    if (tag && !form.tags.includes(tag) && form.tags.length < 12) set({ tags: [...form.tags, tag] });
+    if (tag && !form.tags.includes(tag) && form.tags.length < 12)
+      set({ tags: [...form.tags, tag] });
     setTagInput("");
   };
 
@@ -184,7 +212,11 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         eyebrow={
-          <Link to="/admin/posts" search={{ type }} className="inline-flex items-center gap-1 hover:text-primary">
+          <Link
+            to="/admin/posts"
+            search={{ type }}
+            className="inline-flex items-center gap-1 hover:text-primary"
+          >
             <ArrowLeft className="size-3.5" /> {def.label}
           </Link>
         }
@@ -192,7 +224,11 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
         description={
           <span className="flex flex-wrap items-center gap-2">
             {post && <StatusPill status={post.status} />}
-            {dirty ? <span className="text-amber-700">Unsaved changes</span> : post && <span>Saved {formatDateTime(post.updated_at)}</span>}
+            {dirty ? (
+              <span className="text-amber-700">Unsaved changes</span>
+            ) : (
+              post && <span>Saved {formatDateTime(post.updated_at)}</span>
+            )}
             {post?.author_name && <span>· by {post.author_name}</span>}
           </span>
         }
@@ -206,13 +242,26 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
                   </a>
                 </Button>
               )}
-              <Button variant="outline" disabled={!valid || save.isPending} onClick={() => save.mutate("draft")}>
-                {save.isPending && save.variables === "draft" ? <Loader2 className="animate-spin" /> : <Save />}
+              <Button
+                variant="outline"
+                disabled={!valid || save.isPending}
+                onClick={() => save.mutate("draft")}
+              >
+                {save.isPending && save.variables === "draft" ? (
+                  <Loader2 className="animate-spin" />
+                ) : (
+                  <Save />
+                )}
                 {publisher ? "Save draft" : "Save draft for review"}
               </Button>
               {publisher && (
-                <Button disabled={!valid || save.isPending} onClick={() => save.mutate("published")}>
-                  {save.isPending && save.variables === "published" && <Loader2 className="animate-spin" />}
+                <Button
+                  disabled={!valid || save.isPending}
+                  onClick={() => save.mutate("published")}
+                >
+                  {save.isPending && save.variables === "published" && (
+                    <Loader2 className="animate-spin" />
+                  )}
                   {post?.status === "published" ? "Update" : scheduled ? "Schedule" : "Publish"}
                 </Button>
               )}
@@ -224,7 +273,8 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
       {locked && (
         <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
           <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-          This post has been published or belongs to someone else — ask an editor if it needs changes.
+          This post has been published or belongs to someone else — ask an editor if it needs
+          changes.
         </div>
       )}
       {!publisher && !locked && (
@@ -239,20 +289,43 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
           <Panel>
             <div className="grid gap-4">
               <Field label="Title">
-                <Input value={form.title} onChange={(e) => set({ title: e.target.value })} className="h-11 text-lg font-semibold" maxLength={255} />
+                <Input
+                  value={form.title}
+                  onChange={(e) => set({ title: e.target.value })}
+                  className="h-11 text-lg font-semibold"
+                  maxLength={255}
+                />
               </Field>
-              <Field label="Web address" hint={form.slug ? undefined : "Created from the title when you save."}>
+              <Field
+                label="Web address"
+                hint={form.slug ? undefined : "Created from the title when you save."}
+              >
                 <div className="flex items-center rounded-md border border-input bg-secondary/40 pl-3 text-sm">
                   <span className="shrink-0 text-muted-foreground">{def.path}/</span>
                   <input
                     value={form.slug}
-                    onChange={(e) => set({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-") })}
+                    onChange={(e) =>
+                      set({
+                        slug: e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, "-")
+                          .replace(/-+/g, "-"),
+                      })
+                    }
                     className="h-9 min-w-0 flex-1 rounded-r-md bg-white px-2 font-mono outline-none"
                   />
                 </div>
               </Field>
-              <Field label="Summary" hint="One or two sentences shown on cards, in search and when shared.">
-                <Textarea rows={2} value={form.excerpt} onChange={(e) => set({ excerpt: e.target.value })} maxLength={600} />
+              <Field
+                label="Summary"
+                hint="One or two sentences shown on cards, in search and when shared."
+              >
+                <Textarea
+                  rows={2}
+                  value={form.excerpt}
+                  onChange={(e) => set({ excerpt: e.target.value })}
+                  maxLength={600}
+                />
               </Field>
             </div>
           </Panel>
@@ -261,61 +334,133 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
             <Panel title="Event details">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Starts" error={!form.eventStart ? "Required for events" : undefined}>
-                  <Input type="datetime-local" value={form.eventStart} onChange={(e) => set({ eventStart: e.target.value })} />
+                  <Input
+                    type="datetime-local"
+                    value={form.eventStart}
+                    onChange={(e) => set({ eventStart: e.target.value })}
+                  />
                 </Field>
-                <Field label="Ends" hint="Optional" error={form.eventEnd && form.eventStart && form.eventEnd < form.eventStart ? "Ends before it starts" : undefined}>
-                  <Input type="datetime-local" value={form.eventEnd} onChange={(e) => set({ eventEnd: e.target.value })} />
+                <Field
+                  label="Ends"
+                  hint="Optional"
+                  error={
+                    form.eventEnd && form.eventStart && form.eventEnd < form.eventStart
+                      ? "Ends before it starts"
+                      : undefined
+                  }
+                >
+                  <Input
+                    type="datetime-local"
+                    value={form.eventEnd}
+                    onChange={(e) => set({ eventEnd: e.target.value })}
+                  />
                 </Field>
                 <Field label="Venue">
-                  <Input value={form.venue} onChange={(e) => set({ venue: e.target.value })} placeholder="e.g. College Assembly Hall" />
+                  <Input
+                    value={form.venue}
+                    onChange={(e) => set({ venue: e.target.value })}
+                    placeholder="e.g. College Assembly Hall"
+                  />
                 </Field>
-                <LinkField label="Registration link (optional)" value={form.registrationUrl} onChange={(registrationUrl) => set({ registrationUrl })} />
+                <LinkField
+                  label="Registration link (optional)"
+                  value={form.registrationUrl}
+                  onChange={(registrationUrl) => set({ registrationUrl })}
+                />
               </div>
             </Panel>
           )}
 
           <Panel title="Content">
-            <RichTextEditor value={form.body} onChange={(body) => set({ body })} folder="posts" placeholder="Write the full story…" minHeight="min-h-96" />
+            <RichTextEditor
+              value={form.body}
+              onChange={(body) => set({ body })}
+              folder="posts"
+              placeholder="Write the full story…"
+              minHeight="min-h-96"
+            />
           </Panel>
         </div>
 
         <div className="flex flex-col gap-6">
           <Panel title="Publishing">
             <div className="grid gap-4">
-              <Field label="Publish date" hint={scheduled ? "In the future — it will go live automatically then." : "Shown as the post date."}>
-                <Input type="datetime-local" value={form.publishedAt} onChange={(e) => set({ publishedAt: e.target.value })} />
+              <Field
+                label="Publish date"
+                hint={
+                  scheduled
+                    ? "In the future — it will go live automatically then."
+                    : "Shown as the post date."
+                }
+              >
+                <Input
+                  type="datetime-local"
+                  value={form.publishedAt}
+                  onChange={(e) => set({ publishedAt: e.target.value })}
+                />
               </Field>
               {publisher && (
                 <>
                   {type === "news" && (
-                    <Switch label="Featured" description="Shown large at the top of the home page news." checked={form.isFeatured} onChange={(isFeatured) => set({ isFeatured })} />
+                    <Switch
+                      label="Featured"
+                      description="Shown large at the top of the home page news."
+                      checked={form.isFeatured}
+                      onChange={(isFeatured) => set({ isFeatured })}
+                    />
                   )}
                   {type === "announcement" && (
-                    <Switch label="Pinned" description="Kept at the top of announcements." checked={form.isPinned} onChange={(isPinned) => set({ isPinned })} />
+                    <Switch
+                      label="Pinned"
+                      description="Kept at the top of announcements."
+                      checked={form.isPinned}
+                      onChange={(isPinned) => set({ isPinned })}
+                    />
                   )}
                   {post?.status === "published" && (
-                    <Button variant="outline" size="sm" className="w-fit" onClick={() => save.mutate("archived")}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-fit"
+                      onClick={() => save.mutate("archived")}
+                    >
                       Archive (unpublish)
                     </Button>
                   )}
                 </>
               )}
               {type === "announcement" && (
-                <Field label="Remove from home page after" hint="Optional. It stays in the announcements archive.">
-                  <Input type="date" value={form.expiresOn} onChange={(e) => set({ expiresOn: e.target.value })} />
+                <Field
+                  label="Remove from home page after"
+                  hint="Optional. It stays in the announcements archive."
+                >
+                  <Input
+                    type="date"
+                    value={form.expiresOn}
+                    onChange={(e) => set({ expiresOn: e.target.value })}
+                  />
                 </Field>
               )}
             </div>
           </Panel>
 
           <Panel title="Cover image">
-            <ImageField folder="posts" value={form.coverImageUrl} onChange={(url) => set({ coverImageUrl: url ?? "" })} />
+            <ImageField
+              folder="posts"
+              value={form.coverImageUrl}
+              onChange={(url) => set({ coverImageUrl: url ?? "" })}
+            />
           </Panel>
 
           <Panel title="Organise">
             <div className="grid gap-4">
               <Field label="Category">
-                <Input list={`categories-${type}`} value={form.category} onChange={(e) => set({ category: e.target.value })} maxLength={80} />
+                <Input
+                  list={`categories-${type}`}
+                  value={form.category}
+                  onChange={(e) => set({ category: e.target.value })}
+                  maxLength={80}
+                />
                 <datalist id={`categories-${type}`}>
                   {def.categories.map((c) => (
                     <option key={c} value={c} />
@@ -325,9 +470,16 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
               <Field label="Tags" hint="Press Enter to add.">
                 <div className="flex flex-wrap gap-1.5 rounded-md border border-input bg-white p-1.5">
                   {form.tags.map((t) => (
-                    <span key={t} className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-primary">
+                    <span
+                      key={t}
+                      className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-primary"
+                    >
                       #{t}
-                      <button type="button" onClick={() => set({ tags: form.tags.filter((x) => x !== t) })} aria-label={`Remove ${t}`}>
+                      <button
+                        type="button"
+                        onClick={() => set({ tags: form.tags.filter((x) => x !== t) })}
+                        aria-label={`Remove ${t}`}
+                      >
                         <X className="size-3" />
                       </button>
                     </span>
@@ -350,8 +502,15 @@ function PostEditor({ type, post, initial }: { type: PostType; post: FullPost | 
             </div>
           </Panel>
 
-          <Panel title="Attachment" description="An optional PDF or document, e.g. the official notice.">
-            <FileField folder="documents" value={form.attachmentUrl} onChange={(url) => set({ attachmentUrl: url ?? "" })} />
+          <Panel
+            title="Attachment"
+            description="An optional PDF or document, e.g. the official notice."
+          >
+            <FileField
+              folder="documents"
+              value={form.attachmentUrl}
+              onChange={(url) => set({ attachmentUrl: url ?? "" })}
+            />
           </Panel>
         </div>
       </fieldset>

@@ -1,7 +1,7 @@
 import { ChevronRight, Home } from "lucide-react";
-import { imageSrc } from "#/lib/asset";
 import { cn } from "#/lib/utils";
 import { SmartLink } from "./smart-link";
+import { OptimizedImage } from "#/components/site/optimized-image";
 
 export interface Crumb {
   label: string;
@@ -31,8 +31,18 @@ export function PageHero({
     <section className="relative isolate overflow-hidden bg-primary text-white">
       {imageUrl ? (
         <>
-          <img src={imageSrc(imageUrl)} alt="" className="absolute inset-0 -z-20 size-full object-cover" />
-          <div className="absolute inset-0 -z-10 bg-gradient-to-r from-primary-dark via-primary/90 to-primary/55" aria-hidden="true" />
+          <OptimizedImage
+            src={imageUrl}
+            alt=""
+            sizes="100vw"
+            quality={60}
+            priority
+            className="absolute inset-0 -z-20 size-full object-cover"
+          />
+          <div
+            className="absolute inset-0 -z-10 bg-gradient-to-r from-primary-dark via-primary/90 to-primary/55"
+            aria-hidden="true"
+          />
         </>
       ) : (
         <>
@@ -43,15 +53,32 @@ export function PageHero({
           />
         </>
       )}
-      <div className={cn("mx-auto max-w-7xl px-4 md:px-8", compact ? "py-10 md:py-12" : "py-14 md:py-20")}>
+      <div
+        className={cn(
+          "mx-auto max-w-7xl px-4 md:px-8",
+          compact ? "py-10 md:py-12" : "py-14 md:py-20",
+        )}
+      >
         <Breadcrumbs crumbs={crumbs} />
         {eyebrow && (
-          <p className="mt-6 text-xs font-bold tracking-[0.18em] text-brand-sky uppercase">{eyebrow}</p>
+          <p className="mt-6 text-xs font-bold tracking-[0.18em] text-brand-sky uppercase">
+            {eyebrow}
+          </p>
         )}
-        <h1 className={cn("max-w-4xl font-extrabold tracking-tight text-balance", eyebrow ? "mt-2" : "mt-6", compact ? "text-3xl md:text-4xl" : "text-4xl md:text-5xl")}>
+        <h1
+          className={cn(
+            "max-w-4xl font-extrabold tracking-tight text-balance",
+            eyebrow ? "mt-2" : "mt-6",
+            compact ? "text-3xl md:text-4xl" : "text-4xl md:text-5xl",
+          )}
+        >
           {title}
         </h1>
-        {summary && <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">{summary}</p>}
+        {summary && (
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
+            {summary}
+          </p>
+        )}
         {children}
       </div>
     </section>

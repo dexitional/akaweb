@@ -11,7 +11,10 @@ const link = z
   .string()
   .trim()
   .max(500)
-  .refine((v) => v === "" || /^(\/|#|https?:\/\/|mailto:|tel:)/i.test(v), "Use a path like /about or a full URL");
+  .refine(
+    (v) => v === "" || /^(\/|#|https?:\/\/|mailto:|tel:)/i.test(v),
+    "Use a path like /about or a full URL",
+  );
 const html = z.string().max(300_000);
 const id = z.string().min(1).max(64);
 
@@ -156,21 +159,81 @@ export interface BlockMeta {
 }
 
 export const BLOCK_CATALOG: Array<BlockMeta> = [
-  { type: "richText", label: "Rich text", description: "Formatted text with headings, lists, links and images.", group: "Content" },
-  { type: "imageText", label: "Image & text", description: "A picture beside a block of text.", group: "Content" },
-  { type: "cards", label: "Card grid", description: "A grid of linked cards with optional images.", group: "Content" },
-  { type: "steps", label: "Steps", description: "A numbered process, e.g. how to apply.", group: "Content" },
+  {
+    type: "richText",
+    label: "Rich text",
+    description: "Formatted text with headings, lists, links and images.",
+    group: "Content",
+  },
+  {
+    type: "imageText",
+    label: "Image & text",
+    description: "A picture beside a block of text.",
+    group: "Content",
+  },
+  {
+    type: "cards",
+    label: "Card grid",
+    description: "A grid of linked cards with optional images.",
+    group: "Content",
+  },
+  {
+    type: "steps",
+    label: "Steps",
+    description: "A numbered process, e.g. how to apply.",
+    group: "Content",
+  },
   { type: "faq", label: "FAQ", description: "Expandable questions and answers.", group: "Content" },
   { type: "callout", label: "Callout", description: "A highlighted notice box.", group: "Content" },
   { type: "stats", label: "Figures", description: "Key numbers in large type.", group: "Content" },
-  { type: "quote", label: "Quote", description: "A testimonial or message with a photo.", group: "Content" },
-  { type: "gallery", label: "Gallery", description: "A grid of photos with a lightbox.", group: "Media" },
-  { type: "video", label: "Video", description: "An embedded YouTube or Vimeo video.", group: "Media" },
-  { type: "people", label: "People", description: "Profiles from a people group, e.g. Management.", group: "Directory" },
-  { type: "departments", label: "Departments / Units", description: "Cards linking to every department or unit.", group: "Directory" },
-  { type: "documents", label: "Downloads", description: "A list of documents from the library.", group: "Directory" },
-  { type: "cta", label: "Call to action", description: "A coloured band with a button.", group: "Engagement" },
-  { type: "contact", label: "Contact details", description: "Contact information, map and enquiry form.", group: "Engagement" },
+  {
+    type: "quote",
+    label: "Quote",
+    description: "A testimonial or message with a photo.",
+    group: "Content",
+  },
+  {
+    type: "gallery",
+    label: "Gallery",
+    description: "A grid of photos with a lightbox.",
+    group: "Media",
+  },
+  {
+    type: "video",
+    label: "Video",
+    description: "An embedded YouTube or Vimeo video.",
+    group: "Media",
+  },
+  {
+    type: "people",
+    label: "People",
+    description: "Profiles from a people group, e.g. Management.",
+    group: "Directory",
+  },
+  {
+    type: "departments",
+    label: "Departments / Units",
+    description: "Cards linking to every department or unit.",
+    group: "Directory",
+  },
+  {
+    type: "documents",
+    label: "Downloads",
+    description: "A list of documents from the library.",
+    group: "Directory",
+  },
+  {
+    type: "cta",
+    label: "Call to action",
+    description: "A coloured band with a button.",
+    group: "Engagement",
+  },
+  {
+    type: "contact",
+    label: "Contact details",
+    description: "Contact information, map and enquiry form.",
+    group: "Engagement",
+  },
 ];
 
 export function blockLabel(type: BlockType) {
@@ -190,7 +253,15 @@ export function createBlock(type: BlockType): Block {
     case "richText":
       return { ...base, type, html: "" };
     case "imageText":
-      return { ...base, type, title: "", html: "", imageUrl: "", imageAlt: "", imagePosition: "right" };
+      return {
+        ...base,
+        type,
+        title: "",
+        html: "",
+        imageUrl: "",
+        imageAlt: "",
+        imagePosition: "right",
+      };
     case "cards":
       return { ...base, type, title: "", intro: "", columns: 3, items: [] };
     case "stats":

@@ -19,6 +19,7 @@ import { activityRoute } from "./modules/activity/route.js";
 import { dashboardRoute } from "./modules/dashboard/route.js";
 import { publicRoute } from "./modules/public/route.js";
 import { directoryRoute } from "./modules/directory/route.js";
+import { staffProfilesRoute } from "./modules/staff-profiles/route.js";
 
 const app = new Hono();
 
@@ -43,6 +44,7 @@ app.route("/activity", activityRoute);
 app.route("/dashboard", dashboardRoute);
 app.route("/public", publicRoute);
 app.route("/directory", directoryRoute);
+app.route("/staff-profiles", staffProfilesRoute);
 
 app.notFound((c) => c.json({ error: "Not found" }, 404));
 

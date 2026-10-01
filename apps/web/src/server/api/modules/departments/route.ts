@@ -5,13 +5,20 @@ import type { DepartmentRow } from "@aka/db";
 import type { RowDataPacket } from "mysql2";
 import { requirePermission } from "../../middleware/require-auth.js";
 import { AppError } from "../../middleware/error-handler.js";
-import { optionalField, optionalText, optionalUrl, reorderSchema, slugSchema } from "../../lib/fields.js";
+import {
+  optionalField,
+  optionalText,
+  optionalUrl,
+  reorderSchema,
+  slugSchema,
+} from "../../lib/fields.js";
 import { deleteRow, findById, insertRow, reorderRows, updateRow } from "../../lib/columns.js";
 import { cleanRichText, toRichHtml } from "../../lib/rich-text.js";
 import { slugify, uniqueSlug } from "../../lib/slug.js";
 import { idParam } from "../../lib/query.js";
 import { logActivity } from "../../lib/activity.js";
 import { validate } from "../../lib/validate.js";
+import { UNIT_CATEGORY_VALUES } from "#/lib/directory";
 
 // Academic departments and the college's units (Academic Affairs, Library,
 // ICT, Quality Assurance, ...). Same shape, different listing.
@@ -32,6 +39,12 @@ const fields = z.object({
   programmes: z.array(z.string().trim().min(1).max(200)).max(40).optional(),
   isPublished: z.boolean().optional(),
   sortOrder: z.number().int().min(0).max(9999).optional(),
+  // Staff directory
+  directoryCategory: z.enum(UNIT_CATEGORY_VALUES).nullable().optional(),
+  code: optionalText(20),
+  websiteUrl: optionalUrl,
+  isFeaturedDirectory: z.boolean().optional(),
+  relatedIds: z.array(z.number().int().positive()).max(20).optional(),
 });
 
 const FIELDS = {
@@ -50,16 +63,28 @@ const FIELDS = {
   programmes: "programmes",
   isPublished: "is_published",
   sortOrder: "sort_order",
+  directoryCategory: "directory_category",
+  code: "code",
+  websiteUrl: "website_url",
+  isFeaturedDirectory: "is_featured_directory",
+  relatedIds: "related_ids",
 };
 
 async function get(id: number) {
   const row = await findById<DepartmentRow>("departments", id, "Department");
-  return { ...row, body: toRichHtml(row.body), programmes: row.programmes ?? [] };
+  return {
+    ...row,
+    body: toRichHtml(row.body),
+    programmes: row.programmes ?? [],
+    related_ids: row.related_ids ?? [],
+  };
 }
 
-async function resolveSlug(k: string, name: string, slug: string | undefined, excludeId?: number) {
-  if (!slug) return uniqueSlug("departments", name, { column: "kind", value: k }, excludeId);
-  const free = await uniqueSlug("departments", slug, { column: "kind", value: k }, excludeId);
+// Unique across departments and units alike: the staff directory addresses
+// both as /directory/d/<slug>.
+async function resolveSlug(name: string, slug: string | undefined, excludeId?: number) {
+  if (!slug) return uniqueSlug("departments", name, null, excludeId);
+  const free = await uniqueSlug("departments", slug, null, excludeId);
   if (free !== slugify(slug)) throw new AppError(`The address “${slug}” is already in use.`, 409);
   return free;
 }
@@ -82,9 +107,19 @@ export const departmentsRoute = new Hono()
   .use("*", requirePermission("departments", "manage"))
   .post("/", validate("json", fields), async (c) => {
     const input = c.req.valid("json");
-    const slug = await resolveSlug(input.kind, input.name, input.slug);
-    const id = await insertRow("departments", { ...input, slug }, FIELDS);
-    logActivity(c.get("admin").id, "created", "department", id, `Created ${input.kind} “${input.name}”`);
+    const slug = await resolveSlug(input.name, input.slug);
+    const id = await insertRow(
+      "departments",
+      { directoryCategory: input.kind, ...input, slug },
+      FIELDS,
+    );
+    logActivity(
+      c.get("admin").id,
+      "created",
+      "department",
+      id,
+      `Created ${input.kind} “${input.name}”`,
+    );
     return c.json({ department: await get(id) }, 201);
   })
   .post("/reorder", validate("json", reorderSchema), async (c) => {
@@ -97,16 +132,28 @@ export const departmentsRoute = new Hono()
     const input = { ...c.req.valid("json") };
     const k = input.kind ?? current.kind;
     if (input.slug !== undefined || input.kind !== undefined) {
-      input.slug = await resolveSlug(k, input.name ?? current.name, input.slug || current.slug, id);
+      input.slug = await resolveSlug(input.name ?? current.name, input.slug || current.slug, id);
     }
     await updateRow("departments", id, input, FIELDS);
-    logActivity(c.get("admin").id, "updated", "department", id, `Updated ${k} “${input.name ?? current.name}”`);
+    logActivity(
+      c.get("admin").id,
+      "updated",
+      "department",
+      id,
+      `Updated ${k} “${input.name ?? current.name}”`,
+    );
     return c.json({ department: await get(id) });
   })
   .delete("/:id", async (c) => {
     const id = idParam(c.req.param("id"));
     const current = await get(id);
     await deleteRow("departments", id, "Department");
-    logActivity(c.get("admin").id, "deleted", "department", id, `Deleted ${current.kind} “${current.name}”`);
+    logActivity(
+      c.get("admin").id,
+      "deleted",
+      "department",
+      id,
+      `Deleted ${current.kind} “${current.name}”`,
+    );
     return c.body(null, 204);
   });

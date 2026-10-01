@@ -34,7 +34,8 @@ export const SECTIONS: Array<SectionDef> = [
     label: "Admissions",
     path: "/admissions",
     eyebrow: "Join us",
-    intro: "Everything you need to apply, from entry requirements to fees and the reporting checklist.",
+    intro:
+      "Everything you need to apply, from entry requirements to fees and the reporting checklist.",
   },
   {
     key: "student-life",
@@ -72,14 +73,30 @@ export const POST_TYPES: Array<PostTypeDef> = [
     label: "News",
     singular: "News story",
     path: "/news",
-    categories: ["College News", "Academics", "Student Life", "Sports", "Research", "Community", "Alumni"],
+    categories: [
+      "College News",
+      "Academics",
+      "Student Life",
+      "Sports",
+      "Research",
+      "Community",
+      "Alumni",
+    ],
   },
   {
     type: "event",
     label: "Events",
     singular: "Event",
     path: "/events",
-    categories: ["Academic", "Ceremony", "Conference", "Workshop", "Sports", "Cultural", "Religious"],
+    categories: [
+      "Academic",
+      "Ceremony",
+      "Conference",
+      "Workshop",
+      "Sports",
+      "Cultural",
+      "Religious",
+    ],
   },
   {
     type: "announcement",
@@ -94,8 +111,15 @@ export function postTypeDef(type: PostType): PostTypeDef {
   return POST_TYPES.find((t) => t.type === type)!;
 }
 
-export const DEPARTMENT_KINDS: Record<DepartmentKind, { label: string; plural: string; path: string }> = {
-  department: { label: "Department", plural: "Academic Departments", path: "/academics/departments" },
+export const DEPARTMENT_KINDS: Record<
+  DepartmentKind,
+  { label: string; plural: string; path: string }
+> = {
+  department: {
+    label: "Department",
+    plural: "Academic Departments",
+    path: "/academics/departments",
+  },
   unit: { label: "Unit", plural: "Units of the College", path: "/academics/units" },
 };
 
@@ -110,7 +134,10 @@ export const PERSON_GROUPS = [
 ] as const;
 
 export type PersonGroup = (typeof PERSON_GROUPS)[number]["key"];
-export const PERSON_GROUP_KEYS = PERSON_GROUPS.map((g) => g.key) as [PersonGroup, ...Array<PersonGroup>];
+export const PERSON_GROUP_KEYS = PERSON_GROUPS.map((g) => g.key) as [
+  PersonGroup,
+  ...Array<PersonGroup>,
+];
 
 export function personGroupLabel(key: string) {
   return PERSON_GROUPS.find((g) => g.key === key)?.label ?? key;

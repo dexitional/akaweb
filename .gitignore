@@ -13,3 +13,6 @@ build/
 .DS_Store
 .vscode/*
 !.vscode/extensions.json
+
+# Optimised image variants (apps/web/.cache/images)
+.cache/

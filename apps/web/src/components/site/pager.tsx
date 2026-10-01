@@ -12,7 +12,15 @@ export function Pager({
   page: number;
   total: number;
   pageSize: number;
-  renderLink: (page: number, props: { className: string; children: React.ReactNode; "aria-label"?: string; "aria-current"?: "page" }) => React.ReactNode;
+  renderLink: (
+    page: number,
+    props: {
+      className: string;
+      children: React.ReactNode;
+      "aria-label"?: string;
+      "aria-current"?: "page";
+    },
+  ) => React.ReactNode;
 }) {
   const pages = Math.ceil(total / pageSize);
   if (pages <= 1) return null;
@@ -23,12 +31,16 @@ export function Pager({
     else if (numbers[numbers.length - 1] !== "gap") numbers.push("gap");
   }
 
-  const base = "flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors";
+  const base =
+    "flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-sm font-semibold transition-colors";
   return (
     <nav aria-label="Pagination" className="mt-12 flex items-center justify-center gap-1.5">
       {page > 1 &&
         renderLink(page - 1, {
-          className: cn(base, "border border-border bg-white text-slate-700 hover:border-primary hover:text-primary"),
+          className: cn(
+            base,
+            "border border-border bg-white text-slate-700 hover:border-primary hover:text-primary",
+          ),
           "aria-label": "Previous page",
           children: <ChevronLeft className="size-4" aria-hidden="true" />,
         })}
@@ -40,7 +52,12 @@ export function Pager({
         ) : (
           <span key={n}>
             {renderLink(n, {
-              className: cn(base, n === page ? "bg-primary text-white" : "border border-border bg-white text-slate-700 hover:border-primary hover:text-primary"),
+              className: cn(
+                base,
+                n === page
+                  ? "bg-primary text-white"
+                  : "border border-border bg-white text-slate-700 hover:border-primary hover:text-primary",
+              ),
               "aria-current": n === page ? "page" : undefined,
               children: n,
             })}
@@ -49,7 +66,10 @@ export function Pager({
       )}
       {page < pages &&
         renderLink(page + 1, {
-          className: cn(base, "border border-border bg-white text-slate-700 hover:border-primary hover:text-primary"),
+          className: cn(
+            base,
+            "border border-border bg-white text-slate-700 hover:border-primary hover:text-primary",
+          ),
           "aria-label": "Next page",
           children: <ChevronRight className="size-4" aria-hidden="true" />,
         })}

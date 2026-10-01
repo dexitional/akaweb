@@ -11,7 +11,13 @@ import { AdminPageHeader, Field, errorToast } from "#/components/admin/ui";
 import { MediaBrowser, MediaThumb } from "#/components/admin/media-library";
 import { Button } from "#/components/ui/button.tsx";
 import { Input } from "#/components/ui/input.tsx";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog.tsx";
 
 export const Route = createFileRoute("/admin/_admin/media")({
   component: MediaPage,
@@ -47,7 +53,12 @@ function AssetDialog({ asset, onClose }: { asset: MediaAsset | null; onClose: ()
 
   const { data: usage, isLoading: usageLoading } = useQuery({
     queryKey: ["media", "usage", asset?.id],
-    queryFn: () => api.get<{ usage: Array<{ kind: string; id: number | string; label: string }> }>(`/media/${asset!.id}/usage`).then((r) => r.usage),
+    queryFn: () =>
+      api
+        .get<{ usage: Array<{ kind: string; id: number | string; label: string }> }>(
+          `/media/${asset!.id}/usage`,
+        )
+        .then((r) => r.usage),
     enabled: asset !== null,
   });
 
@@ -82,7 +93,11 @@ function AssetDialog({ asset, onClose }: { asset: MediaAsset | null; onClose: ()
           <div className="grid gap-6 md:grid-cols-[1fr_280px]">
             <div className="flex items-center justify-center overflow-hidden rounded-lg border border-border bg-[repeating-conic-gradient(#f1f4fb_0_25%,#fff_0_50%)] bg-[length:20px_20px]">
               {isImage(asset) ? (
-                <img src={asset.url} alt={asset.alt_text ?? ""} className="max-h-[50vh] w-auto object-contain" />
+                <img
+                  src={asset.url}
+                  alt={asset.alt_text ?? ""}
+                  className="max-h-[50vh] w-auto object-contain"
+                />
               ) : (
                 <div className="aspect-square w-40">
                   <MediaThumb asset={asset} />
@@ -106,7 +121,11 @@ function AssetDialog({ asset, onClose }: { asset: MediaAsset | null; onClose: ()
                 <dt className="text-muted-foreground">Uploaded</dt>
                 <dd>
                   {formatDateTime(asset.created_at)}
-                  {asset.uploaded_by_name && <span className="block text-xs text-muted-foreground">by {asset.uploaded_by_name}</span>}
+                  {asset.uploaded_by_name && (
+                    <span className="block text-xs text-muted-foreground">
+                      by {asset.uploaded_by_name}
+                    </span>
+                  )}
                 </dd>
               </dl>
               <div className="flex gap-2">
@@ -127,12 +146,23 @@ function AssetDialog({ asset, onClose }: { asset: MediaAsset | null; onClose: ()
                 </Button>
               </div>
               {isImage(asset) && (
-                <Field label="Alternative text" hint="Describes the image for screen readers and search engines.">
-                  <Input value={altText} onChange={(e) => setAltText(e.target.value)} maxLength={255} />
+                <Field
+                  label="Alternative text"
+                  hint="Describes the image for screen readers and search engines."
+                >
+                  <Input
+                    value={altText}
+                    onChange={(e) => setAltText(e.target.value)}
+                    maxLength={255}
+                  />
                 </Field>
               )}
               <Field label="Folder">
-                <select value={folder} onChange={(e) => setFolder(e.target.value as MediaFolder)} className="h-9 rounded-md border border-input bg-white px-3 text-sm">
+                <select
+                  value={folder}
+                  onChange={(e) => setFolder(e.target.value as MediaFolder)}
+                  className="h-9 rounded-md border border-input bg-white px-3 text-sm"
+                >
                   {MEDIA_FOLDERS.map((f) => (
                     <option key={f.key} value={f.key}>
                       {f.label}
@@ -160,7 +190,10 @@ function AssetDialog({ asset, onClose }: { asset: MediaAsset | null; onClose: ()
           </div>
           {confirming && (
             <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
-              <TriangleAlert className="mt-0.5 size-4 shrink-0 text-destructive" aria-hidden="true" />
+              <TriangleAlert
+                className="mt-0.5 size-4 shrink-0 text-destructive"
+                aria-hidden="true"
+              />
               <p>
                 {inUse
                   ? `This file is still used in ${usage!.length} place${usage!.length === 1 ? "" : "s"} — those spots will show a broken image or link. Delete anyway?`
@@ -170,11 +203,19 @@ function AssetDialog({ asset, onClose }: { asset: MediaAsset | null; onClose: ()
           )}
           <DialogFooter className="sm:justify-between">
             {confirming ? (
-              <Button variant="destructive" disabled={remove.isPending} onClick={() => remove.mutate()}>
+              <Button
+                variant="destructive"
+                disabled={remove.isPending}
+                onClick={() => remove.mutate()}
+              >
                 {remove.isPending && <Loader2 className="animate-spin" />} Yes, delete permanently
               </Button>
             ) : (
-              <Button variant="ghost" className="text-destructive" onClick={() => setConfirming(true)}>
+              <Button
+                variant="ghost"
+                className="text-destructive"
+                onClick={() => setConfirming(true)}
+              >
                 <Trash2 /> Delete file
               </Button>
             )}

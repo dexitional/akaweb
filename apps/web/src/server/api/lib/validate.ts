@@ -4,7 +4,10 @@ import type { z } from "zod";
 
 // zValidator that answers failures as { error: "<first problem>" } (422),
 // the shape the CMS's api client shows to the user.
-export function validate<TTarget extends keyof ValidationTargets, TSchema extends z.ZodType>(target: TTarget, schema: TSchema) {
+export function validate<TTarget extends keyof ValidationTargets, TSchema extends z.ZodType>(
+  target: TTarget,
+  schema: TSchema,
+) {
   return zValidator(target, schema, (result, c) => {
     if (!result.success) {
       const issue = result.error.issues[0];

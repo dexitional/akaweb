@@ -1,7 +1,13 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { requirePermission } from "../../middleware/require-auth.js";
-import { optionalField, optionalText, optionalUrl, reorderSchema, slugSchema } from "../../lib/fields.js";
+import {
+  optionalField,
+  optionalText,
+  optionalUrl,
+  reorderSchema,
+  slugSchema,
+} from "../../lib/fields.js";
 import { cleanRichText, sanitizeRichText } from "../../lib/rich-text.js";
 import { idParam } from "../../lib/query.js";
 import { SECTION_KEYS } from "#/lib/content";
@@ -12,7 +18,9 @@ import { validate } from "../../lib/validate.js";
 
 // The HTML inside blocks gets the same allowlist as page bodies.
 function sanitizeBlocks(blocks: Array<Block>): Array<Block> {
-  return blocks.map((b) => (b.type === "richText" || b.type === "imageText" ? { ...b, html: sanitizeRichText(b.html) } : b));
+  return blocks.map((b) =>
+    b.type === "richText" || b.type === "imageText" ? { ...b, html: sanitizeRichText(b.html) } : b,
+  );
 }
 
 const pageFields = z.object({
@@ -34,7 +42,9 @@ export const createPageSchema = pageFields;
 export const updatePageSchema = pageFields.partial();
 
 export const pagesRoute = new Hono()
-  .get("/", requirePermission("pages", "view"), async (c) => c.json({ pages: await service.listPages() }))
+  .get("/", requirePermission("pages", "view"), async (c) =>
+    c.json({ pages: await service.listPages() }),
+  )
   .get("/:id", requirePermission("pages", "view"), async (c) =>
     c.json({ page: await service.getPage(idParam(c.req.param("id"))) }),
   )
@@ -47,10 +57,19 @@ export const pagesRoute = new Hono()
     return c.json({ ok: true });
   })
   .post("/:id/duplicate", async (c) =>
-    c.json({ page: await service.duplicatePage(c.get("admin").id, idParam(c.req.param("id"))) }, 201),
+    c.json(
+      { page: await service.duplicatePage(c.get("admin").id, idParam(c.req.param("id"))) },
+      201,
+    ),
   )
   .patch("/:id", validate("json", updatePageSchema), async (c) =>
-    c.json({ page: await service.updatePage(c.get("admin").id, idParam(c.req.param("id")), c.req.valid("json")) }),
+    c.json({
+      page: await service.updatePage(
+        c.get("admin").id,
+        idParam(c.req.param("id")),
+        c.req.valid("json"),
+      ),
+    }),
   )
   .delete("/:id", async (c) => {
     await service.deletePage(c.get("admin").id, idParam(c.req.param("id")));

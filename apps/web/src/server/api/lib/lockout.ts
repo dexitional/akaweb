@@ -33,5 +33,4 @@ export function formatLockedUntil(lockedUntil: string | Date): string {
 // row keeps failed-login response timing indistinguishable from a genuine
 // wrong-credential case, so the endpoint can't be used to enumerate valid
 // registration numbers / institutional emails via timing.
-export const DUMMY_BCRYPT_HASH =
-  "$2b$12$CwTycUXWue0Thq9StjUM0uJ8k5NuQlKY9x9lLElqOb3ROn9E0mCcW";
+export const DUMMY_BCRYPT_HASH = "$2b$12$CwTycUXWue0Thq9StjUM0uJ8k5NuQlKY9x9lLElqOb3ROn9E0mCcW";

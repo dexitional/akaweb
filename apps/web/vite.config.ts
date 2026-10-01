@@ -12,6 +12,8 @@ export default defineConfig({
   plugins: [
     devtools(),
     nitro({
+      // Image optimiser (src/server/image-optimizer.ts).
+      handlers: [{ route: "/img", method: "GET", handler: "./src/server/img-handler.ts" }],
       routeRules: {
         "/assets/**": { headers: { "cache-control": "public, max-age=31536000, immutable" } },
         "/logo.webp": { headers: { "cache-control": "public, max-age=604800" } },

@@ -1,4 +1,12 @@
-import { ArrowRight, ArrowUpRight, CalendarDays, Clock, MapPin, Megaphone, Pin } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  CalendarDays,
+  Clock,
+  MapPin,
+  Megaphone,
+  Pin,
+} from "lucide-react";
 import type { PostType } from "@aka/db";
 import { dateParts, formatDate, formatEventRange, formatTime, hasTime } from "#/lib/format";
 import { cn } from "#/lib/utils";
@@ -6,7 +14,11 @@ import type { PostCard } from "#/server/content";
 import { CoverImage } from "./cover-image";
 import { SmartLink } from "./smart-link";
 
-const BASE: Record<PostType, string> = { news: "/news", event: "/events", announcement: "/announcements" };
+const BASE: Record<PostType, string> = {
+  news: "/news",
+  event: "/events",
+  announcement: "/announcements",
+};
 
 export function postHref(post: Pick<PostCard, "type" | "slug">) {
   return `${BASE[post.type]}/${post.slug}`;
@@ -23,13 +35,20 @@ export function NewsCard({ post, featured = false }: { post: PostCard; featured?
     >
       <CoverImage
         src={post.cover_image_url}
+        sizes={
+          featured
+            ? "(min-width: 1024px) 55vw, 100vw"
+            : "(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+        }
         className={cn("aspect-[16/10] shrink-0", featured && "lg:aspect-auto lg:w-[55%]")}
         imgClassName="transition-transform duration-500 group-hover:scale-105"
       />
       <article className={cn("flex flex-1 flex-col p-5", featured && "lg:justify-center lg:p-8")}>
         <div className="flex flex-wrap items-center gap-2 text-[13px] text-muted-foreground">
           {post.category && (
-            <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-primary">{post.category}</span>
+            <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-primary">
+              {post.category}
+            </span>
           )}
           <span className="flex items-center gap-1">
             <CalendarDays className="size-3.5" aria-hidden="true" />
@@ -45,13 +64,21 @@ export function NewsCard({ post, featured = false }: { post: PostCard; featured?
           {post.title}
         </h3>
         {post.excerpt && (
-          <p className={cn("mt-2 text-sm leading-relaxed text-muted-foreground", featured ? "line-clamp-4" : "line-clamp-2")}>
+          <p
+            className={cn(
+              "mt-2 text-sm leading-relaxed text-muted-foreground",
+              featured ? "line-clamp-4" : "line-clamp-2",
+            )}
+          >
             {post.excerpt}
           </p>
         )}
         <span className="mt-auto flex items-center gap-1 pt-4 text-sm font-semibold text-primary">
           Read story
-          <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+          <ArrowRight
+            className="size-3.5 transition-transform group-hover:translate-x-1"
+            aria-hidden="true"
+          />
         </span>
       </article>
     </SmartLink>
@@ -71,7 +98,11 @@ export function AnnouncementCard({ post }: { post: PostCard }) {
           important ? "bg-brand-flame text-white" : "bg-primary text-white",
         )}
       >
-        {post.is_pinned ? <Pin className="size-5" aria-hidden="true" /> : <Megaphone className="size-5" aria-hidden="true" />}
+        {post.is_pinned ? (
+          <Pin className="size-5" aria-hidden="true" />
+        ) : (
+          <Megaphone className="size-5" aria-hidden="true" />
+        )}
       </div>
       <article className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
@@ -90,8 +121,12 @@ export function AnnouncementCard({ post }: { post: PostCard }) {
             {formatDate(post.published_at)}
           </span>
         </div>
-        <h3 className="mt-2 line-clamp-2 font-bold text-slate-900 group-hover:text-primary">{post.title}</h3>
-        {post.excerpt && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>}
+        <h3 className="mt-2 line-clamp-2 font-bold text-slate-900 group-hover:text-primary">
+          {post.title}
+        </h3>
+        {post.excerpt && (
+          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
+        )}
       </article>
       <ArrowUpRight
         className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:text-primary"
@@ -101,13 +136,21 @@ export function AnnouncementCard({ post }: { post: PostCard }) {
   );
 }
 
-export function EventCard({ post, variant = "card" }: { post: PostCard; variant?: "card" | "row" }) {
+export function EventCard({
+  post,
+  variant = "card",
+}: {
+  post: PostCard;
+  variant?: "card" | "row";
+}) {
   const start = post.event_start ?? post.published_at;
   const { day, month } = dateParts(start);
   const dateTile = (
     <div className="flex size-16 shrink-0 flex-col items-center justify-center rounded-xl bg-primary text-white shadow-md">
       <span className="text-2xl leading-none font-extrabold">{day}</span>
-      <span className="mt-0.5 text-[11px] font-bold tracking-wider text-brand-sky uppercase">{month}</span>
+      <span className="mt-0.5 text-[11px] font-bold tracking-wider text-brand-sky uppercase">
+        {month}
+      </span>
     </div>
   );
 
@@ -119,7 +162,9 @@ export function EventCard({ post, variant = "card" }: { post: PostCard; variant?
       >
         {dateTile}
         <div className="min-w-0">
-          <h3 className="line-clamp-2 font-bold text-slate-900 group-hover:text-primary">{post.title}</h3>
+          <h3 className="line-clamp-2 font-bold text-slate-900 group-hover:text-primary">
+            {post.title}
+          </h3>
           <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[13px] text-muted-foreground">
             {hasTime(start) && (
               <span className="flex items-center gap-1">
@@ -158,7 +203,9 @@ export function EventCard({ post, variant = "card" }: { post: PostCard; variant?
         )}
       </div>
       <article className="flex flex-1 flex-col p-5 pt-9">
-        <h3 className="line-clamp-2 text-lg font-bold text-slate-900 group-hover:text-primary">{post.title}</h3>
+        <h3 className="line-clamp-2 text-lg font-bold text-slate-900 group-hover:text-primary">
+          {post.title}
+        </h3>
         <div className="mt-2 space-y-1 text-[13px] text-muted-foreground">
           <p className="flex items-center gap-1.5">
             <CalendarDays className="size-3.5 shrink-0" aria-hidden="true" />
@@ -171,7 +218,9 @@ export function EventCard({ post, variant = "card" }: { post: PostCard; variant?
             </p>
           )}
         </div>
-        {post.excerpt && <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>}
+        {post.excerpt && (
+          <p className="mt-3 line-clamp-2 text-sm text-muted-foreground">{post.excerpt}</p>
+        )}
       </article>
     </SmartLink>
   );

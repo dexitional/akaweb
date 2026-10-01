@@ -6,9 +6,37 @@ import sanitizeHtml from "sanitize-html";
 // non-http(s) URLs ever get through.
 const OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: [
-    "p", "br", "h2", "h3", "h4", "strong", "b", "em", "i", "u", "s", "mark", "sub", "sup",
-    "blockquote", "ul", "ol", "li", "a", "img", "figure", "figcaption", "hr", "code", "pre",
-    "table", "thead", "tbody", "tr", "th", "td",
+    "p",
+    "br",
+    "h2",
+    "h3",
+    "h4",
+    "strong",
+    "b",
+    "em",
+    "i",
+    "u",
+    "s",
+    "mark",
+    "sub",
+    "sup",
+    "blockquote",
+    "ul",
+    "ol",
+    "li",
+    "a",
+    "img",
+    "figure",
+    "figcaption",
+    "hr",
+    "code",
+    "pre",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
   ],
   allowedAttributes: {
     a: ["href", "target", "rel"],
@@ -42,7 +70,12 @@ export function sanitizeRichText(html: string): string {
 // "<p></p>" from an emptied editor counts as no content; an image alone does.
 export function isRichTextEmpty(html: string): boolean {
   if (/<img\s/i.test(html)) return false;
-  return html.replace(/<[^>]*>/g, "").replace(/&nbsp;/g, " ").trim() === "";
+  return (
+    html
+      .replace(/<[^>]*>/g, "")
+      .replace(/&nbsp;/g, " ")
+      .trim() === ""
+  );
 }
 
 // Stored HTML → safe HTML, or null when there's nothing to show.
@@ -60,6 +93,10 @@ export function cleanRichText(value: string | null | undefined): string | null |
 
 export function plainText(html: string | null, max = 200) {
   if (!html) return "";
-  const textOnly = html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+  const textOnly = html
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
   return textOnly.length > max ? `${textOnly.slice(0, max - 1).trimEnd()}…` : textOnly;
 }

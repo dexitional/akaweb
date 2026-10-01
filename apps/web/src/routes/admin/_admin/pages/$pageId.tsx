@@ -10,7 +10,14 @@ import { SECTIONS, SECTION_KEYS, sectionDef } from "#/lib/content";
 import type { Block } from "#/lib/blocks";
 import { canManage } from "#/lib/permissions";
 import { formatDateTime } from "#/lib/format";
-import { AdminPageHeader, Field, Panel, StatusPill, Switch, errorToast } from "#/components/admin/ui";
+import {
+  AdminPageHeader,
+  Field,
+  Panel,
+  StatusPill,
+  Switch,
+  errorToast,
+} from "#/components/admin/ui";
 import { RichTextEditor } from "#/components/admin/rich-text-editor";
 import { BlockEditor } from "#/components/admin/block-editor";
 import { ImageField } from "#/components/admin/media-fields";
@@ -100,14 +107,19 @@ function PageEditor({ page, initial }: { page: FullPage | null; initial: Form })
   // Set just before navigating away after a save, when `dirty` is stale.
   const bypassBlock = useRef(false);
   useBlocker({
-    shouldBlockFn: () => !bypassBlock.current && dirty && !window.confirm("You have unsaved changes. Leave without saving?"),
+    shouldBlockFn: () =>
+      !bypassBlock.current &&
+      dirty &&
+      !window.confirm("You have unsaved changes. Leave without saving?"),
     enableBeforeUnload: () => dirty,
   });
 
   const save = useMutation({
     mutationFn: (status: "draft" | "published") => {
       const body = { ...form, status, slug: form.slug.replace(/^-+|-+$/g, "") };
-      return page ? api.patch<{ page: FullPage }>(`/pages/${page.id}`, body) : api.post<{ page: FullPage }>("/pages", body);
+      return page
+        ? api.patch<{ page: FullPage }>(`/pages/${page.id}`, body)
+        : api.post<{ page: FullPage }>("/pages", body);
     },
     onSuccess: ({ page: savedPage }, status) => {
       const next = toForm(savedPage);
@@ -117,7 +129,11 @@ function PageEditor({ page, initial }: { page: FullPage | null; initial: Form })
       toast.success(status === "published" ? "Page published." : "Draft saved.");
       if (!page) {
         bypassBlock.current = true;
-        void navigate({ to: "/admin/pages/$pageId", params: { pageId: String(savedPage.id) }, replace: true });
+        void navigate({
+          to: "/admin/pages/$pageId",
+          params: { pageId: String(savedPage.id) },
+          replace: true,
+        });
       }
     },
     onError: errorToast("Couldn't save the page."),
@@ -149,7 +165,11 @@ function PageEditor({ page, initial }: { page: FullPage | null; initial: Form })
         description={
           <span className="flex flex-wrap items-center gap-2">
             {page && <StatusPill status={page.status} />}
-            {dirty ? <span className="text-amber-700">Unsaved changes</span> : page && <span>Saved {formatDateTime(page.updated_at)}</span>}
+            {dirty ? (
+              <span className="text-amber-700">Unsaved changes</span>
+            ) : (
+              page && <span>Saved {formatDateTime(page.updated_at)}</span>
+            )}
           </span>
         }
         actions={
@@ -163,12 +183,25 @@ function PageEditor({ page, initial }: { page: FullPage | null; initial: Form })
             )}
             {canEdit && (
               <>
-                <Button variant="outline" disabled={!valid || save.isPending} onClick={() => save.mutate("draft")}>
-                  {save.isPending && save.variables === "draft" ? <Loader2 className="animate-spin" /> : <Save />}
+                <Button
+                  variant="outline"
+                  disabled={!valid || save.isPending}
+                  onClick={() => save.mutate("draft")}
+                >
+                  {save.isPending && save.variables === "draft" ? (
+                    <Loader2 className="animate-spin" />
+                  ) : (
+                    <Save />
+                  )}
                   {form.status === "published" ? "Save as draft" : "Save draft"}
                 </Button>
-                <Button disabled={!valid || save.isPending} onClick={() => save.mutate("published")}>
-                  {save.isPending && save.variables === "published" && <Loader2 className="animate-spin" />}
+                <Button
+                  disabled={!valid || save.isPending}
+                  onClick={() => save.mutate("published")}
+                >
+                  {save.isPending && save.variables === "published" && (
+                    <Loader2 className="animate-spin" />
+                  )}
                   {page?.status === "published" ? "Update" : "Publish"}
                 </Button>
               </>
@@ -182,31 +215,66 @@ function PageEditor({ page, initial }: { page: FullPage | null; initial: Form })
           <Panel>
             <div className="grid gap-4">
               <Field label="Title">
-                <Input value={form.title} onChange={(e) => set({ title: e.target.value })} className="h-11 text-lg font-semibold" placeholder="e.g. History of the College" />
+                <Input
+                  value={form.title}
+                  onChange={(e) => set({ title: e.target.value })}
+                  className="h-11 text-lg font-semibold"
+                  placeholder="e.g. History of the College"
+                />
               </Field>
-              <Field label="Page address" hint={form.slug ? undefined : "Leave blank to create it from the title."}>
+              <Field
+                label="Page address"
+                hint={form.slug ? undefined : "Leave blank to create it from the title."}
+              >
                 <div className="flex items-center rounded-md border border-input bg-secondary/40 pl-3 text-sm">
                   <span className="shrink-0 text-muted-foreground">{def.path}/</span>
                   <input
                     value={form.slug}
-                    onChange={(e) => set({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-") })}
+                    onChange={(e) =>
+                      set({
+                        slug: e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, "-")
+                          .replace(/-+/g, "-"),
+                      })
+                    }
                     placeholder="history"
                     className="h-9 min-w-0 flex-1 rounded-r-md bg-white px-2 font-mono outline-none"
                   />
                 </div>
               </Field>
-              <Field label="Summary" hint="Shown under the title and on section cards. Also used for search engines if no SEO description is set.">
-                <Textarea rows={2} value={form.summary} onChange={(e) => set({ summary: e.target.value })} maxLength={500} />
+              <Field
+                label="Summary"
+                hint="Shown under the title and on section cards. Also used for search engines if no SEO description is set."
+              >
+                <Textarea
+                  rows={2}
+                  value={form.summary}
+                  onChange={(e) => set({ summary: e.target.value })}
+                  maxLength={500}
+                />
               </Field>
             </div>
           </Panel>
 
           <Panel title="Main content" description="Optional rich text shown before the blocks.">
-            <RichTextEditor value={form.body} onChange={(body) => set({ body })} folder="pages" placeholder="Write the page's introduction or full content…" />
+            <RichTextEditor
+              value={form.body}
+              onChange={(body) => set({ body })}
+              folder="pages"
+              placeholder="Write the page's introduction or full content…"
+            />
           </Panel>
 
-          <Panel title="Page blocks" description="Build the rest of the page from reusable sections. They appear in this order.">
-            <BlockEditor blocks={form.blocks} onChange={(blocks) => set({ blocks })} folder="pages" />
+          <Panel
+            title="Page blocks"
+            description="Build the rest of the page from reusable sections. They appear in this order."
+          >
+            <BlockEditor
+              blocks={form.blocks}
+              onChange={(blocks) => set({ blocks })}
+              folder="pages"
+            />
           </Panel>
         </div>
 
@@ -226,10 +294,24 @@ function PageEditor({ page, initial }: { page: FullPage | null; initial: Form })
                   ))}
                 </select>
               </Field>
-              <Switch label="Show in menu" description="List this page in the section's dropdown and sidebar." checked={form.showInNav} onChange={(showInNav) => set({ showInNav })} />
-              {page?.published_at && <p className="text-xs text-muted-foreground">First published {formatDateTime(page.published_at)}</p>}
+              <Switch
+                label="Show in menu"
+                description="List this page in the section's dropdown and sidebar."
+                checked={form.showInNav}
+                onChange={(showInNav) => set({ showInNav })}
+              />
+              {page?.published_at && (
+                <p className="text-xs text-muted-foreground">
+                  First published {formatDateTime(page.published_at)}
+                </p>
+              )}
               {page?.status === "published" && publicUrl && (
-                <a href={publicUrl} target="_blank" rel="noopener" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                <a
+                  href={publicUrl}
+                  target="_blank"
+                  rel="noopener"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                >
                   View live page <ExternalLink className="size-3.5" />
                 </a>
               )}
@@ -237,21 +319,52 @@ function PageEditor({ page, initial }: { page: FullPage | null; initial: Form })
           </Panel>
 
           <Panel title="Banner image" description="Washed behind the title band and used on cards.">
-            <ImageField folder="pages" value={form.heroImageUrl} onChange={(url) => set({ heroImageUrl: url ?? "" })} />
+            <ImageField
+              folder="pages"
+              value={form.heroImageUrl}
+              onChange={(url) => set({ heroImageUrl: url ?? "" })}
+            />
           </Panel>
 
-          <Panel title="Search engines" description="How this page appears on Google and when shared.">
-            <div className="grid gap-4">
-              <Field label="SEO title" hint={`${(form.seoTitle || form.title).length}/60 characters`}>
-                <Input value={form.seoTitle} onChange={(e) => set({ seoTitle: e.target.value })} placeholder={form.title} maxLength={200} />
+          <Panel
+            title="Search engines"
+            description="How this page appears on Google and when shared."
+          >
+            {/* minmax(0,1fr): the one-line preview below must truncate, not widen the card. */}
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
+              <Field
+                label="SEO title"
+                hint={`${(form.seoTitle || form.title).length}/60 characters`}
+              >
+                <Input
+                  value={form.seoTitle}
+                  onChange={(e) => set({ seoTitle: e.target.value })}
+                  placeholder={form.title}
+                  maxLength={200}
+                />
               </Field>
-              <Field label="SEO description" hint={`${(form.seoDescription || form.summary).length}/160 characters`}>
-                <Textarea rows={3} value={form.seoDescription} onChange={(e) => set({ seoDescription: e.target.value })} placeholder={form.summary} maxLength={300} />
+              <Field
+                label="SEO description"
+                hint={`${(form.seoDescription || form.summary).length}/160 characters`}
+              >
+                <Textarea
+                  rows={3}
+                  value={form.seoDescription}
+                  onChange={(e) => set({ seoDescription: e.target.value })}
+                  placeholder={form.summary}
+                  maxLength={300}
+                />
               </Field>
-              <div className="rounded-lg border border-border bg-secondary/40 p-3">
-                <p className="truncate text-xs text-emerald-700">akatsicoe.edu.gh{def.path}/{form.slug || "…"}</p>
-                <p className="truncate text-[15px] font-medium text-blue-800">{form.seoTitle || form.title || "Page title"} | Akatsi College of Education</p>
-                <p className="line-clamp-2 text-xs text-muted-foreground">{form.seoDescription || form.summary || "Add a summary to describe this page."}</p>
+              <div className="min-w-0 rounded-lg border border-border bg-secondary/40 p-3">
+                <p className="truncate text-xs text-emerald-700">
+                  akatsicoe.edu.gh{def.path}/{form.slug || "…"}
+                </p>
+                <p className="truncate text-[15px] font-medium text-blue-800">
+                  {form.seoTitle || form.title || "Page title"} | Akatsi College of Education
+                </p>
+                <p className="line-clamp-2 text-xs text-muted-foreground">
+                  {form.seoDescription || form.summary || "Add a summary to describe this page."}
+                </p>
               </div>
             </div>
           </Panel>

@@ -40,11 +40,18 @@ export const authRoute = new Hono()
     deleteCookie(c, ADMIN_SESSION_COOKIE, { path: "/" });
     return c.json({ ok: true });
   })
-  .get("/me", requireAdminRole(ANY_ADMIN), async (c) => c.json({ admin: await service.getProfile(c.get("admin").id) }))
+  .get("/me", requireAdminRole(ANY_ADMIN), async (c) =>
+    c.json({ admin: await service.getProfile(c.get("admin").id) }),
+  )
   .patch("/me", requireAdminRole(ANY_ADMIN), validate("json", profileSchema), async (c) =>
     c.json({ admin: await service.updateProfile(c.get("admin").id, c.req.valid("json")) }),
   )
-  .post("/me/password", requireAdminRole(ANY_ADMIN), validate("json", changePasswordSchema), async (c) => {
-    await service.changePassword(c.get("admin").id, c.req.valid("json"));
-    return c.json({ ok: true });
-  });
+  .post(
+    "/me/password",
+    requireAdminRole(ANY_ADMIN),
+    validate("json", changePasswordSchema),
+    async (c) => {
+      await service.changePassword(c.get("admin").id, c.req.valid("json"));
+      return c.json({ ok: true });
+    },
+  );

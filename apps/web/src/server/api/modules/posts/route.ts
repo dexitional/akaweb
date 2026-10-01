@@ -45,7 +45,8 @@ type PostInput = Partial<z.infer<typeof postFields>>;
 // What each type needs to render. Applied to the merged post on PATCH too.
 export function postProblems(p: PostInput): Array<{ path: string; message: string }> {
   const problems: Array<{ path: string; message: string }> = [];
-  if (p.type === "event" && !p.eventStart) problems.push({ path: "eventStart", message: "Events need a start date and time." });
+  if (p.type === "event" && !p.eventStart)
+    problems.push({ path: "eventStart", message: "Events need a start date and time." });
   if (p.eventStart && p.eventEnd && p.eventEnd < p.eventStart) {
     problems.push({ path: "eventEnd", message: "The event can't end before it starts." });
   }
@@ -53,7 +54,8 @@ export function postProblems(p: PostInput): Array<{ path: string; message: strin
 }
 
 export const createPostSchema = postFields.superRefine((p, ctx) => {
-  for (const { path, message } of postProblems(p)) ctx.addIssue({ code: "custom", path: [path], message });
+  for (const { path, message } of postProblems(p))
+    ctx.addIssue({ code: "custom", path: [path], message });
 });
 export const updatePostSchema = postFields.omit({ type: true }).partial();
 
@@ -65,13 +67,21 @@ const listQuerySchema = pageQuerySchema.extend({
 
 export const postsRoute = new Hono()
   .use("*", requirePermission("posts", "manage"))
-  .get("/", async (c) => c.json(await service.listPosts(c.get("admin"), listQuerySchema.parse(c.req.query()))))
+  .get("/", async (c) =>
+    c.json(await service.listPosts(c.get("admin"), listQuerySchema.parse(c.req.query()))),
+  )
   .get("/:id", async (c) => c.json({ post: await service.getPost(idParam(c.req.param("id"))) }))
   .post("/", validate("json", createPostSchema), async (c) =>
     c.json({ post: await service.createPost(c.get("admin"), c.req.valid("json")) }, 201),
   )
   .patch("/:id", validate("json", updatePostSchema), async (c) =>
-    c.json({ post: await service.updatePost(c.get("admin"), idParam(c.req.param("id")), c.req.valid("json")) }),
+    c.json({
+      post: await service.updatePost(
+        c.get("admin"),
+        idParam(c.req.param("id")),
+        c.req.valid("json"),
+      ),
+    }),
   )
   .delete("/:id", async (c) => {
     await service.deletePost(c.get("admin"), idParam(c.req.param("id")));

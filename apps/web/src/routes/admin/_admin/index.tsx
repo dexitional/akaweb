@@ -26,17 +26,48 @@ export const Route = createFileRoute("/admin/_admin/")({
 
 interface DashboardData {
   counts: Record<
-    "pages" | "publishedPosts" | "draftPosts" | "upcomingEvents" | "documents" | "media" | "newMessages" | "totalDownloads",
+    | "pages"
+    | "publishedPosts"
+    | "draftPosts"
+    | "upcomingEvents"
+    | "documents"
+    | "media"
+    | "newMessages"
+    | "totalDownloads",
     number
   >;
-  recentPosts: Array<{ id: number; type: string; title: string; status: string; published_at: string; updated_at: string }>;
-  drafts: Array<{ id: number; type: string; title: string; updated_at: string; author_name: string | null }>;
+  recentPosts: Array<{
+    id: number;
+    type: string;
+    title: string;
+    status: string;
+    published_at: string;
+    updated_at: string;
+  }>;
+  drafts: Array<{
+    id: number;
+    type: string;
+    title: string;
+    updated_at: string;
+    author_name: string | null;
+  }>;
   messages: Array<{ id: number; name: string; subject: string; created_at: string }>;
-  activity: Array<{ id: number; action: string; entity: string; summary: string; created_at: string; admin_name: string | null }>;
+  activity: Array<{
+    id: number;
+    action: string;
+    entity: string;
+    summary: string;
+    created_at: string;
+    admin_name: string | null;
+  }>;
   topPosts: Array<{ id: number; type: string; title: string; view_count: number }>;
 }
 
-const TYPE_LABEL: Record<string, string> = { news: "News", event: "Event", announcement: "Announcement" };
+const TYPE_LABEL: Record<string, string> = {
+  news: "News",
+  event: "Event",
+  announcement: "Announcement",
+};
 
 function greeting() {
   const h = new Date().getHours();
@@ -45,17 +76,70 @@ function greeting() {
 
 function Dashboard() {
   const { admin } = Route.useRouteContext();
-  const { data } = useQuery({ queryKey: ["dashboard"], queryFn: () => api.get<DashboardData>("/dashboard") });
+  const { data } = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: () => api.get<DashboardData>("/dashboard"),
+  });
   const c = data?.counts;
 
   const stats = [
-    { label: "Published pages", value: c?.pages, icon: PanelsTopLeft, to: "/admin/pages", module: "pages" as const, tone: "bg-primary text-white" },
-    { label: "Published posts", value: c?.publishedPosts, icon: Newspaper, to: "/admin/posts", module: "posts" as const, tone: "bg-brand-green text-white" },
-    { label: "Upcoming events", value: c?.upcomingEvents, icon: CalendarDays, to: "/admin/posts", module: "posts" as const, tone: "bg-sky-500 text-white" },
-    { label: "Drafts", value: c?.draftPosts, icon: PenLine, to: "/admin/posts", module: "posts" as const, tone: "bg-amber-500 text-white" },
-    { label: "Downloads", value: c?.documents, sub: c ? `${c.totalDownloads.toLocaleString()} total downloads` : undefined, icon: Download, to: "/admin/documents", module: "documents" as const, tone: "bg-indigo-500 text-white" },
-    { label: "Media files", value: c?.media, icon: FolderOpen, to: "/admin/media", module: "media" as const, tone: "bg-slate-700 text-white" },
-    { label: "New messages", value: c?.newMessages, icon: Inbox, to: "/admin/messages", module: "messages" as const, tone: "bg-rose-500 text-white" },
+    {
+      label: "Published pages",
+      value: c?.pages,
+      icon: PanelsTopLeft,
+      to: "/admin/pages",
+      module: "pages" as const,
+      tone: "bg-primary text-white",
+    },
+    {
+      label: "Published posts",
+      value: c?.publishedPosts,
+      icon: Newspaper,
+      to: "/admin/posts",
+      module: "posts" as const,
+      tone: "bg-brand-green text-white",
+    },
+    {
+      label: "Upcoming events",
+      value: c?.upcomingEvents,
+      icon: CalendarDays,
+      to: "/admin/posts",
+      module: "posts" as const,
+      tone: "bg-sky-500 text-white",
+    },
+    {
+      label: "Drafts",
+      value: c?.draftPosts,
+      icon: PenLine,
+      to: "/admin/posts",
+      module: "posts" as const,
+      tone: "bg-amber-500 text-white",
+    },
+    {
+      label: "Downloads",
+      value: c?.documents,
+      sub: c ? `${c.totalDownloads.toLocaleString()} total downloads` : undefined,
+      icon: Download,
+      to: "/admin/documents",
+      module: "documents" as const,
+      tone: "bg-indigo-500 text-white",
+    },
+    {
+      label: "Media files",
+      value: c?.media,
+      icon: FolderOpen,
+      to: "/admin/media",
+      module: "media" as const,
+      tone: "bg-slate-700 text-white",
+    },
+    {
+      label: "New messages",
+      value: c?.newMessages,
+      icon: Inbox,
+      to: "/admin/messages",
+      module: "messages" as const,
+      tone: "bg-rose-500 text-white",
+    },
   ].filter((s) => canView(admin.role, s.module));
 
   return (
@@ -67,12 +151,20 @@ function Dashboard() {
           canManage(admin.role, "posts") && (
             <>
               <Button asChild variant="outline">
-                <Link to="/admin/posts/$postId" params={{ postId: "new" }} search={{ type: "event" }}>
+                <Link
+                  to="/admin/posts/$postId"
+                  params={{ postId: "new" }}
+                  search={{ type: "event" }}
+                >
                   <CalendarDays /> New event
                 </Link>
               </Button>
               <Button asChild>
-                <Link to="/admin/posts/$postId" params={{ postId: "new" }} search={{ type: "news" }}>
+                <Link
+                  to="/admin/posts/$postId"
+                  params={{ postId: "new" }}
+                  search={{ type: "news" }}
+                >
                   <Plus /> Write news
                 </Link>
               </Button>
@@ -83,12 +175,19 @@ function Dashboard() {
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
         {stats.map((s) => (
-          <Link key={s.label} to={s.to} className="group rounded-xl border border-border bg-white p-5 transition-shadow hover:shadow-md">
+          <Link
+            key={s.label}
+            to={s.to}
+            className="group rounded-xl border border-border bg-white p-5 transition-shadow hover:shadow-md"
+          >
             <div className="flex items-start justify-between">
               <span className={cn("flex size-10 items-center justify-center rounded-lg", s.tone)}>
                 <s.icon className="size-5" aria-hidden="true" />
               </span>
-              <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
+              <ArrowRight
+                className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100"
+                aria-hidden="true"
+              />
             </div>
             <p className="mt-4 text-3xl font-extrabold tabular-nums">{s.value ?? "–"}</p>
             <p className="text-sm text-muted-foreground">{s.label}</p>
@@ -98,17 +197,32 @@ function Dashboard() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">
-        <Panel title="Recently updated" description="Your latest news, events and announcements." className="xl:col-span-2">
+        <Panel
+          title="Recently updated"
+          description="Your latest news, events and announcements."
+          className="xl:col-span-2"
+        >
           {data?.recentPosts.length ? (
             <ul className="-my-2 divide-y divide-border">
               {data.recentPosts.map((p) => (
                 <li key={p.id}>
-                  <Link to="/admin/posts/$postId" params={{ postId: String(p.id) }} className="flex items-center gap-3 py-3 hover:text-primary">
-                    <FileText className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                  <Link
+                    to="/admin/posts/$postId"
+                    params={{ postId: String(p.id) }}
+                    className="flex items-center gap-3 py-3 hover:text-primary"
+                  >
+                    <FileText
+                      className="size-4 shrink-0 text-muted-foreground"
+                      aria-hidden="true"
+                    />
                     <span className="min-w-0 flex-1 truncate font-medium">{p.title}</span>
-                    <span className="hidden text-xs text-muted-foreground sm:inline">{TYPE_LABEL[p.type]}</span>
+                    <span className="hidden text-xs text-muted-foreground sm:inline">
+                      {TYPE_LABEL[p.type]}
+                    </span>
                     <StatusPill status={p.status} />
-                    <span className="w-24 text-right text-xs text-muted-foreground">{timeAgo(p.updated_at)}</span>
+                    <span className="w-24 text-right text-xs text-muted-foreground">
+                      {timeAgo(p.updated_at)}
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -124,10 +238,15 @@ function Dashboard() {
               <ul className="-my-1 space-y-2">
                 {data.drafts.map((d) => (
                   <li key={d.id}>
-                    <Link to="/admin/posts/$postId" params={{ postId: String(d.id) }} className="block rounded-lg p-2 hover:bg-secondary">
+                    <Link
+                      to="/admin/posts/$postId"
+                      params={{ postId: String(d.id) }}
+                      className="block rounded-lg p-2 hover:bg-secondary"
+                    >
                       <p className="truncate text-sm font-medium">{d.title}</p>
                       <p className="text-xs text-muted-foreground">
-                        {TYPE_LABEL[d.type]} · {d.author_name ?? "Unknown"} · {timeAgo(d.updated_at)}
+                        {TYPE_LABEL[d.type]} · {d.author_name ?? "Unknown"} ·{" "}
+                        {timeAgo(d.updated_at)}
                       </p>
                     </Link>
                   </li>
@@ -139,7 +258,10 @@ function Dashboard() {
             <Panel
               title="New messages"
               actions={
-                <Link to="/admin/messages" className="text-xs font-semibold text-primary hover:underline">
+                <Link
+                  to="/admin/messages"
+                  className="text-xs font-semibold text-primary hover:underline"
+                >
                   Inbox
                 </Link>
               }
@@ -169,7 +291,9 @@ function Dashboard() {
             <ol className="-my-1 space-y-2">
               {data.topPosts.map((p, i) => (
                 <li key={p.id} className="flex items-center gap-3 text-sm">
-                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-primary">{i + 1}</span>
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-primary">
+                    {i + 1}
+                  </span>
                   <span className="min-w-0 flex-1 truncate">{p.title}</span>
                   <span className="flex items-center gap-1 text-xs text-muted-foreground tabular-nums">
                     <Eye className="size-3.5" aria-hidden="true" />
@@ -187,7 +311,10 @@ function Dashboard() {
             title="Recent activity"
             className="xl:col-span-2"
             actions={
-              <Link to="/admin/activity" className="text-xs font-semibold text-primary hover:underline">
+              <Link
+                to="/admin/activity"
+                className="text-xs font-semibold text-primary hover:underline"
+              >
                 View all
               </Link>
             }
@@ -196,11 +323,18 @@ function Dashboard() {
               <ul className="-my-1 space-y-3">
                 {data.activity.map((a) => (
                   <li key={a.id} className="flex items-start gap-3 text-sm">
-                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-brand-green" aria-hidden="true" />
+                    <span
+                      className="mt-1.5 size-2 shrink-0 rounded-full bg-brand-green"
+                      aria-hidden="true"
+                    />
                     <span className="min-w-0 flex-1">
-                      <span className="font-medium">{a.admin_name ?? "Someone"}</span> <span className="text-muted-foreground">— {a.summary}</span>
+                      <span className="font-medium">{a.admin_name ?? "Someone"}</span>{" "}
+                      <span className="text-muted-foreground">— {a.summary}</span>
                     </span>
-                    <span className="shrink-0 text-xs text-muted-foreground" title={formatDate(a.created_at)}>
+                    <span
+                      className="shrink-0 text-xs text-muted-foreground"
+                      title={formatDate(a.created_at)}
+                    >
                       {timeAgo(a.created_at)}
                     </span>
                   </li>

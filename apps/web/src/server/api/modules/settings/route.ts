@@ -6,7 +6,9 @@ import type { SettingsKey } from "#/lib/settings";
 import * as service from "./service.js";
 
 export const settingsRoute = new Hono()
-  .get("/", requirePermission("settings", "view"), async (c) => c.json({ settings: await service.getAllSettings() }))
+  .get("/", requirePermission("settings", "view"), async (c) =>
+    c.json({ settings: await service.getAllSettings() }),
+  )
   .put("/:key", requirePermission("settings", "manage"), async (c) => {
     const key = c.req.param("key") as SettingsKey;
     if (!SETTINGS_KEYS.includes(key)) throw new AppError("Unknown settings group.", 404);

@@ -43,7 +43,9 @@ export type Table =
   | "contact_messages";
 
 export async function findById<T>(table: Table, id: number, label = "Record"): Promise<T> {
-  const [rows] = await getPool().execute<RowDataPacket[]>(`SELECT * FROM ${table} WHERE id = ?`, [id]);
+  const [rows] = await getPool().execute<RowDataPacket[]>(`SELECT * FROM ${table} WHERE id = ?`, [
+    id,
+  ]);
   if (!rows[0]) throw new AppError(`${label} not found.`, 404);
   return { ...rows[0] } as T;
 }
@@ -56,10 +58,10 @@ export async function insertRow(
 ) {
   const { columns, params } = toColumns(input, fields);
   const extraCols = Object.keys(extra);
-  const [result] = await getPool().execute<ResultSetHeader>(insertSql(table, [...columns, ...extraCols]), [
-    ...params,
-    ...Object.values(extra),
-  ]);
+  const [result] = await getPool().execute<ResultSetHeader>(
+    insertSql(table, [...columns, ...extraCols]),
+    [...params, ...Object.values(extra)],
+  );
   return result.insertId;
 }
 
@@ -73,11 +75,17 @@ export async function updateRow(
   const { columns, params } = toColumns(input, fields);
   const extraCols = Object.keys(extra);
   if (columns.length + extraCols.length === 0) return;
-  await getPool().execute(updateSql(table, [...columns, ...extraCols]), [...params, ...Object.values(extra), id]);
+  await getPool().execute(updateSql(table, [...columns, ...extraCols]), [
+    ...params,
+    ...Object.values(extra),
+    id,
+  ]);
 }
 
 export async function deleteRow(table: Table, id: number, label = "Record") {
-  const [result] = await getPool().execute<ResultSetHeader>(`DELETE FROM ${table} WHERE id = ?`, [id]);
+  const [result] = await getPool().execute<ResultSetHeader>(`DELETE FROM ${table} WHERE id = ?`, [
+    id,
+  ]);
   if (result.affectedRows === 0) throw new AppError(`${label} not found.`, 404);
 }
 

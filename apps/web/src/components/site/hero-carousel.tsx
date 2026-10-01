@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Pause, Play } from "lucide-react";
 import type { HeroSlide } from "#/server/content";
-import { asset, imageSrc } from "#/lib/asset";
+import { asset } from "#/lib/asset";
 import { cn } from "#/lib/utils";
 import { useSiteLayout } from "#/lib/site-layout";
 import { SmartLink } from "./smart-link";
+import { OptimizedImage } from "#/components/site/optimized-image";
 
 const INTERVAL_MS = 6500;
 const SWIPE_THRESHOLD_PX = 50;
@@ -22,7 +23,8 @@ type Fit = "cover" | "side" | "poster";
 
 function fitFor(slide: HeroSlide): Fit {
   if (!slide.show_text) return "poster";
-  const ratio = slide.image_width && slide.image_height ? slide.image_width / slide.image_height : 1.6;
+  const ratio =
+    slide.image_width && slide.image_height ? slide.image_width / slide.image_height : 1.6;
   return ratio < 1.25 ? "side" : "cover";
 }
 
@@ -53,24 +55,41 @@ export function HeroCarousel({ slides }: { slides: Array<HeroSlide> }) {
     return (
       <section className="relative isolate overflow-hidden bg-primary text-white">
         <div className="dot-grid absolute inset-0 -z-10 opacity-70" aria-hidden="true" />
-        <div className="absolute -right-20 -bottom-40 -z-10 size-[520px] rounded-full bg-brand-green/25 blur-3xl" aria-hidden="true" />
+        <div
+          className="absolute -right-20 -bottom-40 -z-10 size-[520px] rounded-full bg-brand-green/25 blur-3xl"
+          aria-hidden="true"
+        />
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-4 py-20 md:grid-cols-[1fr_auto] md:px-8 md:py-28">
           <div>
-            <p className="text-xs font-bold tracking-[0.2em] text-brand-sky uppercase">{settings.identity.motto}</p>
+            <p className="text-xs font-bold tracking-[0.2em] text-brand-sky uppercase">
+              {settings.identity.motto}
+            </p>
             <h1 className="mt-3 max-w-3xl text-4xl font-extrabold tracking-tight text-balance md:text-6xl">
               {settings.identity.name}
             </h1>
             <p className="mt-5 max-w-xl text-lg text-white/80">{settings.identity.tagline}</p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <SmartLink href="/admissions" className="inline-flex items-center gap-2 rounded-full bg-brand-green px-7 py-3.5 font-bold hover:bg-[#00703f]">
+              <SmartLink
+                href="/admissions"
+                className="inline-flex items-center gap-2 rounded-full bg-brand-green px-7 py-3.5 font-bold hover:bg-[#00703f]"
+              >
                 Apply now <ArrowRight className="size-4" aria-hidden="true" />
               </SmartLink>
-              <SmartLink href="/about" className="inline-flex items-center gap-2 rounded-full bg-white/10 px-7 py-3.5 font-semibold ring-1 ring-white/25 hover:bg-white/20">
+              <SmartLink
+                href="/about"
+                className="inline-flex items-center gap-2 rounded-full bg-white/10 px-7 py-3.5 font-semibold ring-1 ring-white/25 hover:bg-white/20"
+              >
                 Discover Akatsi
               </SmartLink>
             </div>
           </div>
-          <img src={asset("logo.webp")} alt="" className="hidden h-72 w-auto drop-shadow-2xl md:block" />
+          <OptimizedImage
+            src={asset("logo.webp")}
+            alt=""
+            sizes="224px"
+            loading="eager"
+            className="hidden h-72 w-auto drop-shadow-2xl md:block"
+          />
         </div>
       </section>
     );
@@ -112,20 +131,30 @@ export function HeroCarousel({ slides }: { slides: Array<HeroSlide> }) {
             aria-roledescription="slide"
             aria-label={`${i + 1} of ${count}`}
             inert={!active}
-            className={cn("absolute inset-0 transition-opacity duration-1000 ease-in-out", active ? "z-10 opacity-100" : "z-0 opacity-0")}
+            className={cn(
+              "absolute inset-0 transition-opacity duration-1000 ease-in-out",
+              active ? "z-10 opacity-100" : "z-0 opacity-0",
+            )}
           >
-            <img
-              src={imageSrc(slide.image_url)}
+            {/* Blurred backdrop: a tiny variant is plenty. */}
+            <OptimizedImage
+              src={slide.image_url}
               alt=""
               aria-hidden="true"
+              sizes="256px"
+              quality={50}
+              maxWidth={256}
               loading={i === 0 ? "eager" : "lazy"}
-              className={cn("absolute inset-0 size-full scale-110 object-cover opacity-70 blur-2xl", fit === "cover" && "md:hidden")}
+              className={cn(
+                "absolute inset-0 size-full scale-110 object-cover opacity-70 blur-2xl",
+                fit === "cover" && "md:hidden",
+              )}
             />
-            <img
-              src={imageSrc(slide.image_url)}
+            <OptimizedImage
+              src={slide.image_url}
               alt=""
-              loading={i === 0 ? "eager" : "lazy"}
-              decoding="async"
+              sizes="100vw"
+              priority={i === 0}
               className={cn(
                 "absolute inset-0 size-full object-contain object-top transition-transform duration-[7000ms] ease-out",
                 fit === "cover" && "md:object-cover md:object-[center_35%]",
@@ -137,12 +166,21 @@ export function HeroCarousel({ slides }: { slides: Array<HeroSlide> }) {
             />
             {slide.show_text ? (
               <>
-                <div className="absolute inset-0 bg-gradient-to-r from-primary-dark/90 via-primary/60 to-transparent" aria-hidden="true" />
-                <div className="absolute inset-0 bg-gradient-to-t from-primary-dark/80 via-transparent to-transparent" aria-hidden="true" />
+                <div
+                  className="absolute inset-0 bg-gradient-to-r from-primary-dark/90 via-primary/60 to-transparent"
+                  aria-hidden="true"
+                />
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-primary-dark/80 via-transparent to-transparent"
+                  aria-hidden="true"
+                />
               </>
             ) : (
               // Poster slides carry their own text: just keep the controls legible.
-              <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-primary-dark/80 to-transparent" aria-hidden="true" />
+              <div
+                className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-primary-dark/80 to-transparent"
+                aria-hidden="true"
+              />
             )}
 
             {!slide.show_text ? (
@@ -159,30 +197,42 @@ export function HeroCarousel({ slides }: { slides: Array<HeroSlide> }) {
                 )}
               </div>
             ) : (
-            <div className="relative mx-auto flex h-full max-w-7xl items-end px-4 pb-24 md:items-center md:px-8 md:pb-0">
-              <div className={cn("max-w-2xl text-white transition-all delay-200 duration-700", active ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0")}>
-                {slide.eyebrow && (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-brand-green px-3.5 py-1 text-xs font-bold tracking-wider uppercase">
-                    <span className="size-1.5 rounded-full bg-white" aria-hidden="true" />
-                    {slide.eyebrow}
-                  </span>
-                )}
-                <h2 className="mt-4 text-3xl leading-[1.1] font-extrabold tracking-tight text-balance md:text-5xl lg:text-6xl">
-                  {slide.title}
-                </h2>
-                <span className="mt-5 block h-1 w-16 rounded-full bg-brand-sky" aria-hidden="true" />
-                {slide.caption && <p className="mt-5 line-clamp-3 text-base text-white/85 md:text-lg">{slide.caption}</p>}
-                {slide.cta_label && slide.cta_url && (
-                  <SmartLink
-                    href={slide.cta_url}
-                    className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-primary shadow-lg transition hover:bg-brand-sky"
-                  >
-                    {slide.cta_label}
-                    <ArrowRight className="size-4" aria-hidden="true" />
-                  </SmartLink>
-                )}
+              <div className="relative mx-auto flex h-full max-w-7xl items-end px-4 pb-24 md:items-center md:px-8 md:pb-0">
+                <div
+                  className={cn(
+                    "max-w-2xl text-white transition-all delay-200 duration-700",
+                    active ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
+                  )}
+                >
+                  {slide.eyebrow && (
+                    <span className="inline-flex items-center gap-2 rounded-full bg-brand-green px-3.5 py-1 text-xs font-bold tracking-wider uppercase">
+                      <span className="size-1.5 rounded-full bg-white" aria-hidden="true" />
+                      {slide.eyebrow}
+                    </span>
+                  )}
+                  <h2 className="mt-4 text-3xl leading-[1.1] font-extrabold tracking-tight text-balance md:text-5xl lg:text-6xl">
+                    {slide.title}
+                  </h2>
+                  <span
+                    className="mt-5 block h-1 w-16 rounded-full bg-brand-sky"
+                    aria-hidden="true"
+                  />
+                  {slide.caption && (
+                    <p className="mt-5 line-clamp-3 text-base text-white/85 md:text-lg">
+                      {slide.caption}
+                    </p>
+                  )}
+                  {slide.cta_label && slide.cta_url && (
+                    <SmartLink
+                      href={slide.cta_url}
+                      className="mt-7 inline-flex items-center gap-2 rounded-full bg-white px-7 py-3.5 text-sm font-bold text-primary shadow-lg transition hover:bg-brand-sky"
+                    >
+                      {slide.cta_label}
+                      <ArrowRight className="size-4" aria-hidden="true" />
+                    </SmartLink>
+                  )}
+                </div>
               </div>
-            </div>
             )}
           </div>
         );
@@ -207,7 +257,9 @@ export function HeroCarousel({ slides }: { slides: Array<HeroSlide> }) {
                   <span
                     className={cn(
                       "block h-1.5 rounded-full transition-all duration-300",
-                      i === current ? "w-10 bg-brand-sky" : "w-5 bg-white/40 group-hover:bg-white/70",
+                      i === current
+                        ? "w-10 bg-brand-sky"
+                        : "w-5 bg-white/40 group-hover:bg-white/70",
                     )}
                   />
                 </button>
@@ -216,7 +268,11 @@ export function HeroCarousel({ slides }: { slides: Array<HeroSlide> }) {
             <div className="flex items-center gap-2">
               {[
                 { label: "Previous slide", onClick: previous, icon: ChevronLeft },
-                { label: playing ? "Pause slideshow" : "Play slideshow", onClick: () => setPlaying((v) => !v), icon: playing ? Pause : Play },
+                {
+                  label: playing ? "Pause slideshow" : "Play slideshow",
+                  onClick: () => setPlaying((v) => !v),
+                  icon: playing ? Pause : Play,
+                },
                 { label: "Next slide", onClick: next, icon: ChevronRight },
               ].map((control) => (
                 <button

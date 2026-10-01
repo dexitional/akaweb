@@ -5,7 +5,12 @@ import type { RowDataPacket } from "mysql2";
 import type { z } from "zod";
 import { signAdminToken } from "#/server/session-core";
 import { AppError } from "../../middleware/error-handler.js";
-import { DUMMY_BCRYPT_HASH, computeLockoutUntil, formatLockedUntil, isLockedOut } from "../../lib/lockout.js";
+import {
+  DUMMY_BCRYPT_HASH,
+  computeLockoutUntil,
+  formatLockedUntil,
+  isLockedOut,
+} from "../../lib/lockout.js";
 import { logActivity } from "../../lib/activity.js";
 import { findById, updateRow } from "../../lib/columns.js";
 import type { changePasswordSchema, loginSchema, profileSchema } from "./route.js";
@@ -33,11 +38,10 @@ export async function login(input: z.infer<typeof loginSchema>) {
 
   if (!(await bcrypt.compare(input.password, admin.password_hash))) {
     const failed = admin.failed_login_attempts + 1;
-    await pool.execute("UPDATE admins SET failed_login_attempts = ?, locked_until = ? WHERE id = ?", [
-      failed,
-      computeLockoutUntil(failed),
-      admin.id,
-    ]);
+    await pool.execute(
+      "UPDATE admins SET failed_login_attempts = ?, locked_until = ? WHERE id = ?",
+      [failed, computeLockoutUntil(failed), admin.id],
+    );
     throw new AppError("Invalid email or password.", 401);
   }
 

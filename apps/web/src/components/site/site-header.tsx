@@ -7,6 +7,7 @@ import { useSiteLayout } from "#/lib/site-layout";
 import { SECTIONS } from "#/lib/content";
 import { Dialog, DialogContent, DialogTitle } from "#/components/ui/dialog.tsx";
 import { SocialLinks } from "./social-links";
+import { OptimizedImage } from "#/components/site/optimized-image";
 
 interface MenuLink {
   title: string;
@@ -32,14 +33,53 @@ const NEWS_MENU: Menu = {
   items: [
     { title: "News", href: "/news", summary: "Stories from across the college" },
     { title: "Events", href: "/events", summary: "What's coming up on campus" },
-    { title: "Announcements", href: "/announcements", summary: "Official notices and press releases" },
-    { title: "Guides & Downloads", href: "/downloads", summary: "Forms, handbooks, guides and calendars" },
+    {
+      title: "Announcements",
+      href: "/announcements",
+      summary: "Official notices and press releases",
+    },
+    {
+      title: "Guides & Downloads",
+      href: "/downloads",
+      summary: "Forms, handbooks, guides and calendars",
+    },
+  ],
+};
+
+const DIRECTORY_MENU: Menu = {
+  key: "directory",
+  label: "Directory",
+  path: "/directory",
+  eyebrow: "Find people",
+  intro: "Search tutors, researchers and staff, and browse every department, unit and office.",
+  items: [
+    {
+      title: "Staff Directory",
+      href: "/directory",
+      summary: "Search everyone by name or expertise",
+    },
+    {
+      title: "Academic Departments",
+      href: "/directory/d/list/department",
+      summary: "Teaching departments and their staff",
+    },
+    {
+      title: "Units & Offices",
+      href: "/directory/d/list/unit",
+      summary: "Administrative and support units",
+    },
+    { title: "Contacts", href: "/directory/contacts", summary: "Phone, email and heads of units" },
+    {
+      title: "Most Visited Profiles",
+      href: "/directory/most-visited-profiles",
+      summary: "Who people are looking up",
+    },
   ],
 };
 
 function useMenus(): Array<Menu> {
   const { nav, settings } = useSiteLayout();
-  return [
+  const menus: Array<Menu> = [
     ...nav.map((group) => {
       const def = SECTIONS.find((s) => s.key === group.section)!;
       return {
@@ -53,6 +93,10 @@ function useMenus(): Array<Menu> {
     }),
     NEWS_MENU,
   ];
+  // The directory sits just before Alumni (or last, if there's no Alumni menu).
+  const alumni = menus.findIndex((menu) => menu.key === "alumni");
+  menus.splice(alumni === -1 ? menus.length : alumni, 0, DIRECTORY_MENU);
+  return menus;
 }
 
 export function SiteHeader() {
@@ -104,16 +148,22 @@ export function SiteHeader() {
     <>
       {/* Utility bar */}
       <div className="hidden bg-primary-dark text-white/80 lg:block">
-        <div className="mx-auto flex h-10 max-w-7xl items-center justify-between gap-6 px-8 text-[13px]">
+        <div className="mx-auto flex h-10 max-w-7xl items-center justify-between gap-6 px-8 text-[13px] xl:px-6 2xl:max-w-[88rem] 2xl:px-8">
           <div className="flex items-center gap-5">
             {contact.phone && (
-              <a href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-1.5 hover:text-white">
+              <a
+                href={`tel:${contact.phone.replace(/[^\d+]/g, "")}`}
+                className="flex items-center gap-1.5 hover:text-white"
+              >
                 <Phone className="size-3.5" aria-hidden="true" />
                 {contact.phone}
               </a>
             )}
             {contact.email && (
-              <a href={`mailto:${contact.email}`} className="flex items-center gap-1.5 hover:text-white">
+              <a
+                href={`mailto:${contact.email}`}
+                className="flex items-center gap-1.5 hover:text-white"
+              >
                 <Mail className="size-3.5" aria-hidden="true" />
                 {contact.email}
               </a>
@@ -141,20 +191,28 @@ export function SiteHeader() {
       <header
         className={cn(
           "sticky top-0 z-50 border-b bg-white/95 backdrop-blur-md transition-shadow",
-          scrolled ? "border-border shadow-[0_6px_24px_-12px_rgb(11_26_98/0.25)]" : "border-transparent",
+          scrolled
+            ? "border-border shadow-[0_6px_24px_-12px_rgb(11_26_98/0.25)]"
+            : "border-transparent",
         )}
       >
-        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 md:px-8 lg:h-20">
-          <Link to="/" className="flex min-w-0 items-center gap-3" aria-label={`${settings.identity.name} home`}>
-            <img
+        <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 md:px-8 lg:h-20 xl:gap-3 xl:px-6 2xl:max-w-[88rem] 2xl:px-8">
+          <Link
+            to="/"
+            className="flex min-w-0 items-center gap-3"
+            aria-label={`${settings.identity.name} home`}
+          >
+            <OptimizedImage
               src={asset("logo-sm.webp")}
               alt=""
+              sizes="48px"
+              loading="eager"
               width={48}
               height={62}
               className="h-12 w-auto shrink-0 lg:h-[60px]"
             />
             <span className="min-w-0 leading-tight">
-              <span className="block truncate text-[15px] font-extrabold tracking-tight text-primary sm:text-lg lg:text-[19px]">
+              <span className="block truncate text-[15px] font-extrabold tracking-tight text-primary sm:text-lg lg:text-[19px] xl:text-[17px] 2xl:text-[19px]">
                 {settings.identity.name}
               </span>
               <span className="block truncate text-xs font-semibold tracking-[0.14em] text-brand-green uppercase">
@@ -166,7 +224,9 @@ export function SiteHeader() {
           <nav aria-label="Main" className="hidden h-full items-center xl:flex">
             <ul className="flex h-full items-center">
               {menus.map((menu, index) => {
-                const active = pathname === menu.path || pathname.startsWith(`${menu.path}/`) ||
+                const active =
+                  pathname === menu.path ||
+                  pathname.startsWith(`${menu.path}/`) ||
                   (menu.key === "news" && /^\/(events|announcements|downloads)/.test(pathname));
                 const open = openMenu === menu.key;
                 return (
@@ -181,12 +241,15 @@ export function SiteHeader() {
                       aria-expanded={open}
                       onClick={() => setOpenMenu(open ? null : menu.key)}
                       className={cn(
-                        "relative flex h-full items-center gap-1 px-3 text-[14.5px] font-semibold transition-colors",
+                        "relative flex h-full items-center gap-1 px-2.5 text-[14px] font-semibold whitespace-nowrap transition-colors 2xl:px-3 2xl:text-[14.5px]",
                         active || open ? "text-primary" : "text-slate-700 hover:text-primary",
                       )}
                     >
                       {menu.label}
-                      <ChevronDown className={cn("size-3.5 transition-transform", open && "rotate-180")} aria-hidden="true" />
+                      <ChevronDown
+                        className={cn("size-3.5 transition-transform", open && "rotate-180")}
+                        aria-hidden="true"
+                      />
                       <span
                         className={cn(
                           "absolute inset-x-3 bottom-0 h-[3px] rounded-t-full bg-brand-green transition-opacity",
@@ -243,7 +306,15 @@ export function SiteHeader() {
   );
 }
 
-function MegaPanel({ menu, align, onNavigate }: { menu: Menu; align: "left" | "right"; onNavigate: () => void }) {
+function MegaPanel({
+  menu,
+  align,
+  onNavigate,
+}: {
+  menu: Menu;
+  align: "left" | "right";
+  onNavigate: () => void;
+}) {
   const twoColumns = menu.items.length > 4;
   return (
     <div
@@ -259,9 +330,14 @@ function MegaPanel({ menu, align, onNavigate }: { menu: Menu; align: "left" | "r
         )}
       >
         <div className="relative flex flex-col justify-between overflow-hidden bg-primary p-6 text-white">
-          <div className="dot-grid pointer-events-none absolute inset-0 opacity-60" aria-hidden="true" />
+          <div
+            className="dot-grid pointer-events-none absolute inset-0 opacity-60"
+            aria-hidden="true"
+          />
           <div className="relative">
-            <p className="text-[11px] font-bold tracking-[0.16em] text-brand-sky uppercase">{menu.eyebrow}</p>
+            <p className="text-[11px] font-bold tracking-[0.16em] text-brand-sky uppercase">
+              {menu.eyebrow}
+            </p>
             <p className="mt-2 text-xl font-extrabold">{menu.label}</p>
             <p className="mt-2 text-sm leading-relaxed text-white/75">{menu.intro}</p>
           </div>
@@ -293,7 +369,9 @@ function MegaPanel({ menu, align, onNavigate }: { menu: Menu; align: "left" | "r
                   />
                 </span>
                 {item.summary && (
-                  <span className="mt-0.5 line-clamp-1 block text-[13px] text-muted-foreground">{item.summary}</span>
+                  <span className="mt-0.5 line-clamp-1 block text-[13px] text-muted-foreground">
+                    {item.summary}
+                  </span>
                 )}
               </Link>
             </li>
@@ -321,7 +399,12 @@ function MobileDrawer({ menus, onClose }: { menus: Array<Menu>; onClose: () => v
   }, [onClose]);
 
   return (
-    <div className="fixed inset-0 z-[60] xl:hidden" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+    <div
+      className="fixed inset-0 z-[60] xl:hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+    >
       <button
         type="button"
         aria-label="Close menu"
@@ -330,7 +413,10 @@ function MobileDrawer({ menus, onClose }: { menus: Array<Menu>; onClose: () => v
       />
       <div className="absolute inset-y-0 right-0 flex w-full max-w-sm flex-col bg-white shadow-2xl animate-in slide-in-from-right duration-200">
         <div className="flex items-center justify-between border-b border-border px-5 py-4">
-          <p id={titleId} className="text-sm font-bold tracking-wider text-muted-foreground uppercase">
+          <p
+            id={titleId}
+            className="text-sm font-bold tracking-wider text-muted-foreground uppercase"
+          >
             Menu
           </p>
           <button
@@ -343,7 +429,10 @@ function MobileDrawer({ menus, onClose }: { menus: Array<Menu>; onClose: () => v
           </button>
         </div>
         <nav aria-label="Main" className="flex-1 overflow-y-auto px-3 py-3">
-          <Link to="/" className="block rounded-lg px-3 py-3 text-[15px] font-bold text-slate-800 hover:bg-secondary">
+          <Link
+            to="/"
+            className="block rounded-lg px-3 py-3 text-[15px] font-bold text-slate-800 hover:bg-secondary"
+          >
             Home
           </Link>
           {menus.map((menu) => {
@@ -357,7 +446,10 @@ function MobileDrawer({ menus, onClose }: { menus: Array<Menu>; onClose: () => v
                   className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-[15px] font-bold text-slate-800 hover:bg-secondary"
                 >
                   {menu.label}
-                  <ChevronDown className={cn("size-4 transition-transform", open && "rotate-180")} aria-hidden="true" />
+                  <ChevronDown
+                    className={cn("size-4 transition-transform", open && "rotate-180")}
+                    aria-hidden="true"
+                  />
                 </button>
                 {open && (
                   <ul className="mb-2 ml-3 border-l-2 border-brand-green/40 pl-2">
@@ -388,7 +480,7 @@ function MobileDrawer({ menus, onClose }: { menus: Array<Menu>; onClose: () => v
         <div className="space-y-3 border-t border-border p-5">
           <Link
             to="/$section"
-              params={{ section: "admissions" }}
+            params={{ section: "admissions" }}
             className="flex items-center justify-center gap-2 rounded-full bg-brand-green px-5 py-3 text-sm font-bold text-white"
           >
             Apply to Akatsi
@@ -403,10 +495,22 @@ function MobileDrawer({ menus, onClose }: { menus: Array<Menu>; onClose: () => v
   );
 }
 
-function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+function SearchDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
-  const suggestions = ["Admission requirements", "Academic calendar", "Departments", "Student handbook", "Contact"];
+  const suggestions = [
+    "Admission requirements",
+    "Academic calendar",
+    "Departments",
+    "Student handbook",
+    "Contact",
+  ];
 
   const go = (term: string) => {
     const query = term.trim();
@@ -418,7 +522,10 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="top-24 translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-xl" showCloseButton={false}>
+      <DialogContent
+        className="top-24 translate-y-0 gap-0 overflow-hidden p-0 sm:max-w-xl"
+        showCloseButton={false}
+      >
         <DialogTitle className="sr-only">Search the website</DialogTitle>
         <form
           onSubmit={(e) => {
@@ -441,7 +548,9 @@ function SearchDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (op
           </kbd>
         </form>
         <div className="p-4">
-          <p className="mb-2 text-xs font-bold tracking-wider text-muted-foreground uppercase">Popular searches</p>
+          <p className="mb-2 text-xs font-bold tracking-wider text-muted-foreground uppercase">
+            Popular searches
+          </p>
           <div className="flex flex-wrap gap-2">
             {suggestions.map((s) => (
               <button

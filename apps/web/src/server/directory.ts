@@ -100,7 +100,8 @@ interface Directory {
   units: Array<Unit>;
 }
 
-const hasText = (v: string | null | undefined): v is string => typeof v === "string" && v.trim().length > 0;
+const hasText = (v: string | null | undefined): v is string =>
+  typeof v === "string" && v.trim().length > 0;
 
 // ---- Loading ------------------------------------------------------------------------
 
@@ -159,11 +160,18 @@ async function loadDirectory(): Promise<Directory> {
       createdAt: r.created_at,
     }));
     // Primary affiliation: an academic department, then a unit, then any.
-    const rank = (m: Membership) => (m.deptKind === "department" && m.deptPublished ? 0 : m.deptKind === "unit" && m.deptPublished ? 1 : 2);
+    const rank = (m: Membership) =>
+      m.deptKind === "department" && m.deptPublished
+        ? 0
+        : m.deptKind === "unit" && m.deptPublished
+          ? 1
+          : 2;
     const primary = [...memberships].sort((a, b) => rank(a) - rank(b))[0]!;
     const roles = [
       ...new Set(
-        memberships.flatMap((m) => [m.unitRole, m === primary ? null : m.title]).filter((t): t is string => hasText(t) && t !== primary.title),
+        memberships
+          .flatMap((m) => [m.unitRole, m === primary ? null : m.title])
+          .filter((t): t is string => hasText(t) && t !== primary.title),
       ),
     ];
     const bios = memberships.map((m) => m.bio).filter(hasText);
@@ -172,7 +180,10 @@ async function loadDirectory(): Promise<Directory> {
       : memberships.some((m) => m.deptKind === "unit")
         ? "non-teaching"
         : undefined;
-    const updated = [...memberships.map((m) => m.updatedAt), first.sp_updated].filter(Boolean).sort().pop() as string;
+    const updated = [...memberships.map((m) => m.updatedAt), first.sp_updated]
+      .filter(Boolean)
+      .sort()
+      .pop() as string;
     profiles.push({
       id: first.sp_id ?? null,
       slug,
@@ -181,7 +192,11 @@ async function loadDirectory(): Promise<Directory> {
       roles,
       primary,
       memberships,
-      photoUrl: first.sp_photo ?? primary.photoUrl ?? memberships.find((m) => m.photoUrl)?.photoUrl ?? undefined,
+      photoUrl:
+        first.sp_photo ??
+        primary.photoUrl ??
+        memberships.find((m) => m.photoUrl)?.photoUrl ??
+        undefined,
       staffType: first.staff_type ?? derivedType,
       status: first.staff_status ?? "active",
       email: memberships.find((m) => m.email)?.email ?? undefined,
@@ -240,7 +255,8 @@ function staffOfUnit(dir: Directory, unitId: number) {
   return dir.profiles.filter((p) => p.memberships.some((m) => m.deptId === unitId));
 }
 
-const byViewsThenName = (a: Profile, b: Profile) => b.views - a.views || a.name.localeCompare(b.name);
+const byViewsThenName = (a: Profile, b: Profile) =>
+  b.views - a.views || a.name.localeCompare(b.name);
 
 // ---- Views by period ------------------------------------------------------------------
 
@@ -269,7 +285,20 @@ function rankProfiles(profiles: Array<Profile>, views: Map<string, number>) {
 
 // ---- Home -----------------------------------------------------------------------------
 
-const MONTHS_SHORT = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
 function monthYearShort(date: string | null): string {
   const m = date?.match(/^(\d{4})-(\d{2})/);
   return m ? `${MONTHS_SHORT[Number(m[2]) - 1]} ${m[1]}` : "";
@@ -297,12 +326,17 @@ function directoryStats(dir: Directory): DirectoryStats {
 // "Meet a researcher": one teaching-staff profile per UTC day, walking a
 // seeded shuffle so everyone gets a turn before anyone repeats.
 function dailyResearcher(dir: Directory): ResearcherSpotlight | null {
-  const candidates = dir.profiles.filter((p) => p.status !== "in-memoriam").sort((a, b) => a.slug.localeCompare(b.slug));
+  const candidates = dir.profiles
+    .filter((p) => p.status !== "in-memoriam")
+    .sort((a, b) => a.slug.localeCompare(b.slug));
   const teaching = candidates.filter((p) => p.staffType === "teaching");
   const pool = teaching.length > 0 ? teaching : candidates;
   if (pool.length === 0) return null;
   const pick = pool[dailyRotationIndex(new Date(), pool.length)]!;
-  const tags = [pick.details.spotlightTags, pick.details.academicInterests, pick.details.specializations].find((l) => l.length > 0) ?? [];
+  const tags =
+    [pick.details.spotlightTags, pick.details.academicInterests, pick.details.specializations].find(
+      (l) => l.length > 0,
+    ) ?? [];
   const dept = department(pick);
   return {
     name: pick.name,
@@ -338,12 +372,20 @@ function mulberry32(seed: number): () => number {
 
 function unitLeaders(dir: Directory, unit: Unit) {
   return dir.profiles
-    .flatMap((p) => p.memberships.filter((m) => m.deptId === unit.id && hasText(m.unitRole)).map((m) => ({ profile: p, membership: m })))
+    .flatMap((p) =>
+      p.memberships
+        .filter((m) => m.deptId === unit.id && hasText(m.unitRole))
+        .map((m) => ({ profile: p, membership: m })),
+    )
     .sort((a, b) => a.membership.sortOrder - b.membership.sortOrder);
 }
 
 export async function getDirectoryHome() {
-  const [dir, settings, weekViews] = await Promise.all([loadDirectory(), getAllSettings(), periodViews("week")]);
+  const [dir, settings, weekViews] = await Promise.all([
+    loadDirectory(),
+    getAllSettings(),
+    periodViews("week"),
+  ]);
 
   const mostViewed: Array<RankedProfile> = rankProfiles(dir.profiles, weekViews)
     .slice(0, 8)
@@ -433,7 +475,10 @@ function expertiseTags(dir: Directory, curated: Array<string>): Array<string> {
       counts.set(key, entry);
     }
   }
-  return [...counts.values()].sort((a, b) => b.n - a.n || a.label.localeCompare(b.label)).slice(0, 12).map((e) => e.label);
+  return [...counts.values()]
+    .sort((a, b) => b.n - a.n || a.label.localeCompare(b.label))
+    .slice(0, 12)
+    .map((e) => e.label);
 }
 
 export async function getDirectoryStats() {
@@ -459,7 +504,11 @@ function searchPrefixes(query: string): Array<string> {
     .map(singular);
 }
 
-const wordsOf = (text?: string | null) => (text ?? "").toLowerCase().split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+const wordsOf = (text?: string | null) =>
+  (text ?? "")
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean);
 const allMatch = (prefixes: Array<string>, text: string) => {
   const words = wordsOf(text);
   return prefixes.every((prefix) => words.some((w) => w.startsWith(prefix)));
@@ -473,7 +522,9 @@ export async function searchDirectory(
   if (prefixes.length === 0) return { people: [], units: [], categories: [], expertise: [] };
   const dir = await loadDirectory();
 
-  const categoryValues = UNIT_CATEGORIES.filter((c) => allMatch(prefixes, `${c.title} ${c.plural}`)).map((c) => c.value as string);
+  const categoryValues = UNIT_CATEGORIES.filter((c) =>
+    allMatch(prefixes, `${c.title} ${c.plural}`),
+  ).map((c) => c.value as string);
 
   const people = dir.profiles.filter((p) => {
     const tags = [...p.details.academicInterests, ...p.details.specializations].join(" ");
@@ -482,7 +533,8 @@ export async function searchDirectory(
   });
   // Relevance: every word in the name > some word in the name > designation
   // or department > interests only. Ties: most viewed, then name.
-  const hits = (text?: string | null) => prefixes.filter((prefix) => wordsOf(text).some((w) => w.startsWith(prefix))).length;
+  const hits = (text?: string | null) =>
+    prefixes.filter((prefix) => wordsOf(text).some((w) => w.startsWith(prefix))).length;
   const score = (p: Profile) => {
     const nameHits = hits(p.name);
     if (nameHits === prefixes.length) return 3;
@@ -496,10 +548,17 @@ export async function searchDirectory(
     .map(({ p }) => toUnitPerson(p));
 
   const units = dir.units
-    .filter((u) => allMatch(prefixes, `${u.name} ${u.code ?? ""}`) || categoryValues.includes(u.category))
+    .filter(
+      (u) => allMatch(prefixes, `${u.name} ${u.code ?? ""}`) || categoryValues.includes(u.category),
+    )
     .sort((a, b) => a.name.localeCompare(b.name))
     .slice(0, limits.units)
-    .map((u) => ({ name: u.name, code: u.code, slug: u.slug, category: findUnitCategory(u.category)?.title }));
+    .map((u) => ({
+      name: u.name,
+      code: u.code,
+      slug: u.slug,
+      category: findUnitCategory(u.category)?.title,
+    }));
 
   const counts = new Map<string, { label: string; count: number }>();
   for (const p of dir.profiles) {
@@ -515,8 +574,12 @@ export async function searchDirectory(
   return {
     people: rankedPeople,
     units,
-    categories: unitCategories(dir).filter((c) => categoryValues.includes(c.slug)).slice(0, limits.categories),
-    expertise: [...counts.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label)).slice(0, limits.expertise),
+    categories: unitCategories(dir)
+      .filter((c) => categoryValues.includes(c.slug))
+      .slice(0, limits.categories),
+    expertise: [...counts.values()]
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label))
+      .slice(0, limits.expertise),
   };
 }
 
@@ -562,10 +625,14 @@ export async function getUnitList() {
   return { categories: unitCategories(dir), units: directoryUnits(dir) };
 }
 
-export async function getUnit(slug: string): Promise<{ unit: UnitDetail; directoryStaff: Array<UnitPerson> } | null> {
+export async function getUnit(
+  slug: string,
+): Promise<{ unit: UnitDetail; directoryStaff: Array<UnitPerson> } | null> {
   const dir = await loadDirectory();
   // Departments win a (rare) slug clash with a unit.
-  const unit = dir.units.filter((u) => u.slug === slug).sort((a) => (a.kind === "department" ? -1 : 1))[0];
+  const unit = dir.units
+    .filter((u) => u.slug === slug)
+    .sort((a) => (a.kind === "department" ? -1 : 1))[0];
   if (!unit) return null;
 
   const leaders = unitLeaders(dir, unit);
@@ -583,20 +650,42 @@ export async function getUnit(slug: string): Promise<{ unit: UnitDetail; directo
       slug: unit.slug,
       name: unit.name,
       code: unit.code,
-      category: category ? { name: category.title, pluralName: category.plural, slug: category.value } : undefined,
-      leaders: leaders.map(({ profile, membership }) => ({ ...toUnitPerson(profile), role: membership.unitRole ?? undefined })),
+      category: category
+        ? { name: category.title, pluralName: category.plural, slug: category.value }
+        : undefined,
+      leaders: leaders.map(({ profile, membership }) => ({
+        ...toUnitPerson(profile),
+        role: membership.unitRole ?? undefined,
+      })),
       staff: staff.map(toUnitPerson),
-      relatedUnits: dir.units.filter((u) => unit.relatedIds.includes(u.id)).map((u) => ({ name: u.name, slug: u.slug })),
+      relatedUnits: dir.units
+        .filter((u) => unit.relatedIds.includes(u.id))
+        .map((u) => ({ name: u.name, slug: u.slug })),
       summary: unit.summary,
       pageHref: `/academics/${unit.kind === "unit" ? "units" : "departments"}/${unit.slug}`,
     },
-    directoryStaff: [...dir.profiles].sort((a, b) => a.name.localeCompare(b.name)).map(toUnitPerson),
+    directoryStaff: [...dir.profiles]
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(toUnitPerson),
   };
 }
 
 // ---- Profiles ---------------------------------------------------------------------------
 
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
 function monthYear(date: string | undefined): string | undefined {
   const m = date?.match(/^(\d{4})(?:-(\d{2}))?/);
   if (!m) return undefined;
@@ -624,7 +713,8 @@ function timeAgo(value: string | undefined): string {
     ["minute", 60],
   ];
   const format = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-  for (const [unit, size] of units) if (seconds >= size) return format.format(-Math.floor(seconds / size), unit);
+  for (const [unit, size] of units)
+    if (seconds >= size) return format.format(-Math.floor(seconds / size), unit);
   return "just now";
 }
 
@@ -662,7 +752,8 @@ export async function getProfile(slug: string): Promise<ProfileData | null> {
   // How many other staff share each interest — live, never stored.
   const interests = p.details.academicInterests.map((label) => ({
     label,
-    count: others.filter((o) => lower(o.details.academicInterests).includes(label.toLowerCase())).length,
+    count: others.filter((o) => lower(o.details.academicInterests).includes(label.toLowerCase()))
+      .length,
   }));
 
   const selfWords = new Set(wordsOf(p.name).filter((w) => !NAME_PREFIXES.test(w)));
@@ -672,7 +763,11 @@ export async function getProfile(slug: string): Promise<ProfileData | null> {
   };
 
   // Colleague tabs.
-  const deptColleagues = dept ? others.filter((o) => o.memberships.some((m) => m.deptId === dept.deptId)).sort(byViewsThenName) : [];
+  const deptColleagues = dept
+    ? others
+        .filter((o) => o.memberships.some((m) => m.deptId === dept.deptId))
+        .sort(byViewsThenName)
+    : [];
   const interestGroups = p.details.academicInterests
     .map((label) => ({
       label,
@@ -683,10 +778,14 @@ export async function getProfile(slug: string): Promise<ProfileData | null> {
         .map((o) => toColleague(o)),
     }))
     .filter((g) => g.colleagues.length > 0);
-  const interestTotal = new Set(interestGroups.flatMap((g) => g.colleagues.map((c) => c.slug))).size;
+  const interestTotal = new Set(interestGroups.flatMap((g) => g.colleagues.map((c) => c.slug)))
+    .size;
   const mySpecs = lower(p.details.specializations);
   const specColleagues = others
-    .map((o) => ({ o, shared: o.details.specializations.filter((s) => mySpecs.includes(s.toLowerCase())) }))
+    .map((o) => ({
+      o,
+      shared: o.details.specializations.filter((s) => mySpecs.includes(s.toLowerCase())),
+    }))
     .filter((x) => x.shared.length > 0)
     .sort((a, b) => byViewsThenName(a.o, b.o));
 
@@ -698,7 +797,9 @@ export async function getProfile(slug: string): Promise<ProfileData | null> {
        WHERE c.profile_a = ? OR c.profile_b = ? ORDER BY c.views DESC`,
       [p.id, p.id, p.id],
     );
-    coviews = rows.map((r) => ({ slug: r.slug as string, views: Number(r.views) })).filter((c) => dir.bySlug.has(c.slug));
+    coviews = rows
+      .map((r) => ({ slug: r.slug as string, views: Number(r.views) }))
+      .filter((c) => dir.bySlug.has(c.slug));
   }
 
   const tabs: Array<ColleagueTab> = [
@@ -708,24 +809,37 @@ export async function getProfile(slug: string): Promise<ProfileData | null> {
       count: deptColleagues.length,
       colleagues: deptColleagues.slice(0, COLLEAGUE_TAB_LIMIT).map((o) => toColleague(o)),
     },
-    { id: "interest", label: "Shared research interests", count: interestTotal, colleagues: [], groups: interestGroups },
+    {
+      id: "interest",
+      label: "Shared research interests",
+      count: interestTotal,
+      colleagues: [],
+      groups: interestGroups,
+    },
     {
       id: "spec",
       label: "Shared specialisations",
       count: specColleagues.length,
-      colleagues: specColleagues.slice(0, COLLEAGUE_TAB_LIMIT).map((x) => toColleague(x.o, x.shared)),
+      colleagues: specColleagues
+        .slice(0, COLLEAGUE_TAB_LIMIT)
+        .map((x) => toColleague(x.o, x.shared)),
     },
     {
       id: "coview",
       label: "Frequently viewed",
       count: coviews.length,
-      colleagues: coviews.slice(0, COLLEAGUE_TAB_LIMIT).map((c) => toColleague(dir.bySlug.get(c.slug)!)),
+      colleagues: coviews
+        .slice(0, COLLEAGUE_TAB_LIMIT)
+        .map((c) => toColleague(dir.bySlug.get(c.slug)!)),
     },
   ];
 
   const d = p.details;
   const publications = d.publications.map((pub) => {
-    const citations = pub.citations && pub.citations > 0 ? `${pub.citations} citation${pub.citations === 1 ? "" : "s"}` : undefined;
+    const citations =
+      pub.citations && pub.citations > 0
+        ? `${pub.citations} citation${pub.citations === 1 ? "" : "s"}`
+        : undefined;
     return {
       title: pub.title,
       url: hasText(pub.url) ? pub.url : undefined,
@@ -753,16 +867,28 @@ export async function getProfile(slug: string): Promise<ProfileData | null> {
     photoUrl: p.photoUrl,
     email: p.email,
     phone: p.phone,
-    externalLinks: d.externalLinks.map((l) => ({ label: l.label, url: hasText(l.url) ? l.url : undefined })),
+    externalLinks: d.externalLinks.map((l) => ({
+      label: l.label,
+      url: hasText(l.url) ? l.url : undefined,
+    })),
     updatedAgo: timeAgo(p.updatedAt),
-    stats: { profileViews: p.views, shares: p.shares, colleaguesShareInterest: interests[0]?.count ?? 0 },
+    stats: {
+      profileViews: p.views,
+      shares: p.shares,
+      colleaguesShareInterest: interests[0]?.count ?? 0,
+    },
     aboutParagraphs: (p.about ?? "")
       .split(/\n\s*\n|\r?\n/)
       .map((x) => x.trim())
       .filter(Boolean),
     specializations: d.specializations,
     academicInterests: interests,
-    education: d.education.map((e) => ({ degree: e.degree, field: e.field, institution: e.institution, year: e.year })),
+    education: d.education.map((e) => ({
+      degree: e.degree,
+      field: e.field,
+      institution: e.institution,
+      year: e.year,
+    })),
     careerPositions: d.careerPositions.map((c) => ({
       position: c.position,
       organization: c.organization || undefined,
@@ -776,7 +902,10 @@ export async function getProfile(slug: string): Promise<ProfileData | null> {
       period: projectPeriod(x.startDate || undefined, x.endDate || undefined),
       url: hasText(x.url) ? x.url : undefined,
     })),
-    publications: publications.length > 0 || d.orcid ? { orcid: d.orcid || undefined, shown: publications } : undefined,
+    publications:
+      publications.length > 0 || d.orcid
+        ? { orcid: d.orcid || undefined, shown: publications }
+        : undefined,
     honors: d.honors.map((h) => ({ title: h.title, org: h.description, year: "" })),
     conferences: d.conferences.map((c) => ({
       name: c.name,
@@ -786,7 +915,9 @@ export async function getProfile(slug: string): Promise<ProfileData | null> {
       url: hasText(c.url) ? c.url : undefined,
     })),
     colleagueTabs: tabs.filter((t) => t.count > 0),
-    organization: dept?.deptName ? `${settings.identity.name};${dept.deptName}` : settings.identity.name,
+    organization: dept?.deptName
+      ? `${settings.identity.name};${dept.deptName}`
+      : settings.identity.name,
     topInterest: d.academicInterests[0] ?? d.specializations[0],
   };
 }
@@ -795,7 +926,12 @@ export async function getProfileMeta(slug: string) {
   const dir = await loadDirectory();
   const p = dir.bySlug.get(slug);
   if (!p) return null;
-  return { name: p.name, role: p.title, departmentName: department(p)?.deptName ?? undefined, photoUrl: p.photoUrl };
+  return {
+    name: p.name,
+    role: p.title,
+    departmentName: department(p)?.deptName ?? undefined,
+    photoUrl: p.photoUrl,
+  };
 }
 
 export async function getStaffBySlugs(slugs: Array<string>): Promise<Array<UnitPerson>> {
@@ -812,10 +948,16 @@ export async function getStaffBySlugs(slugs: Array<string>): Promise<Array<UnitP
 
 async function profileId(slug: string): Promise<number | null> {
   const pool = getPool();
-  const [exists] = await pool.execute<RowDataPacket[]>("SELECT 1 FROM people WHERE profile_slug = ? LIMIT 1", [slug]);
+  const [exists] = await pool.execute<RowDataPacket[]>(
+    "SELECT 1 FROM people WHERE profile_slug = ? LIMIT 1",
+    [slug],
+  );
   if (!exists[0]) return null;
   await pool.execute("INSERT IGNORE INTO staff_profiles (slug) VALUES (?)", [slug]);
-  const [rows] = await pool.execute<RowDataPacket[]>("SELECT id FROM staff_profiles WHERE slug = ?", [slug]);
+  const [rows] = await pool.execute<RowDataPacket[]>(
+    "SELECT id FROM staff_profiles WHERE slug = ?",
+    [slug],
+  );
   return (rows[0]?.id as number | undefined) ?? null;
 }
 
@@ -824,7 +966,10 @@ export async function trackProfileView(slug: string) {
     const id = await profileId(slug);
     if (!id) return;
     const pool = getPool();
-    await pool.execute("UPDATE staff_profiles SET profile_views = profile_views + 1, updated_at = updated_at WHERE id = ?", [id]);
+    await pool.execute(
+      "UPDATE staff_profiles SET profile_views = profile_views + 1, updated_at = updated_at WHERE id = ?",
+      [id],
+    );
     await pool.execute(
       "INSERT INTO profile_views (profile_id, viewed_on, views) VALUES (?, CURDATE(), 1) ON DUPLICATE KEY UPDATE views = views + 1",
       [id],
@@ -837,7 +982,11 @@ export async function trackProfileView(slug: string) {
 export async function trackProfileShare(slug: string) {
   try {
     const id = await profileId(slug);
-    if (id) await getPool().execute("UPDATE staff_profiles SET shares = shares + 1, updated_at = updated_at WHERE id = ?", [id]);
+    if (id)
+      await getPool().execute(
+        "UPDATE staff_profiles SET shares = shares + 1, updated_at = updated_at WHERE id = ?",
+        [id],
+      );
   } catch (err) {
     console.error("Profile share tracking failed:", err);
   }
@@ -860,6 +1009,13 @@ export async function trackProfileCoView(fromSlug: string, toSlug: string) {
 
 // ---- Contacts & most visited --------------------------------------------------------------
 
+// "Head: Dr. Jane Doe" — who to ask for when a unit has no listed line yet.
+function unitHeadLine(dir: Directory, u: Unit): string | undefined {
+  const leader = unitLeaders(dir, u)[0];
+  const name = leader?.profile.name ?? u.headName;
+  return name ? `${leader?.membership.unitRole ?? "Head"}: ${name}` : undefined;
+}
+
 export async function getContacts(): Promise<Array<ContactGroup>> {
   const [dir, settings] = await Promise.all([loadDirectory(), getAllSettings()]);
   const { contact, identity } = settings;
@@ -880,17 +1036,25 @@ export async function getContacts(): Promise<Array<ContactGroup>> {
   };
   const groups = UNIT_CATEGORIES.map((c) => {
     const contacts = dir.units
-      .filter((u) => u.category === c.value && (u.email || u.phone || u.websiteUrl))
+      .filter((u) => u.category === c.value)
       .map((u) => ({
         name: u.name,
+        description: unitHeadLine(dir, u),
         email: u.email,
         phone: u.phone,
-        website: u.websiteUrl ? { label: u.websiteUrl.replace(/^https?:\/\//, ""), href: u.websiteUrl } : undefined,
+        website: u.websiteUrl
+          ? { label: u.websiteUrl.replace(/^https?:\/\//, ""), href: u.websiteUrl }
+          : undefined,
         code: u.code,
         href: `/directory/d/${u.slug}`,
         category: c.value,
       }));
-    return { key: c.value, heading: c.plural, subtext: `${contacts.length} ${contacts.length === 1 ? "contact" : "contacts"}`, contacts };
+    return {
+      key: c.value,
+      heading: c.plural,
+      subtext: `${contacts.length} ${contacts.length === 1 ? "contact" : "contacts"}`,
+      contacts,
+    };
   }).filter((g) => g.contacts.length > 0);
   return [primary, ...groups];
 }
@@ -915,4 +1079,3 @@ export async function getMostVisited(period: ViewPeriod) {
     .sort((a, b) => a.name.localeCompare(b.name));
   return { profiles, departments };
 }
-

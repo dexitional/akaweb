@@ -2,15 +2,40 @@ import { useState } from "react";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowDown, ArrowUp, Copy, ExternalLink, EyeOff, Layers, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  ExternalLink,
+  EyeOff,
+  Layers,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import type { PageSection } from "@aka/db";
 import { api } from "#/lib/api-client";
 import { SECTIONS, sectionDef } from "#/lib/content";
 import { canManage } from "#/lib/permissions";
 import { timeAgo } from "#/lib/format";
-import { AdminPageHeader, ConfirmDialog, SearchInput, Segmented, StatusPill, TableMessage, errorToast } from "#/components/admin/ui";
+import {
+  AdminPageHeader,
+  ConfirmDialog,
+  SearchInput,
+  Segmented,
+  StatusPill,
+  TableMessage,
+  errorToast,
+} from "#/components/admin/ui";
 import { Button } from "#/components/ui/button.tsx";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#/components/ui/table.tsx";
 
 export const Route = createFileRoute("/admin/_admin/pages/")({
   component: PagesList,
@@ -79,7 +104,9 @@ function PagesList() {
     const [id] = ids.splice(index, 1);
     ids.splice(index + delta, 0, id!);
     queryClient.setQueryData<Array<PageListItem>>(["pages"], (old) =>
-      old?.map((p) => (ids.includes(p.id) ? { ...p, sort_order: ids.indexOf(p.id) } : p)).sort((a, b) => a.sort_order - b.sort_order),
+      old
+        ?.map((p) => (ids.includes(p.id) ? { ...p, sort_order: ids.indexOf(p.id) } : p))
+        .sort((a, b) => a.sort_order - b.sort_order),
     );
     reorder.mutate(ids);
   };
@@ -109,7 +136,11 @@ function PagesList() {
             setSection(v);
             setQ("");
           }}
-          options={SECTIONS.map((s) => ({ value: s.key, label: s.label, count: pages.filter((p) => p.section === s.key).length }))}
+          options={SECTIONS.map((s) => ({
+            value: s.key,
+            label: s.label,
+            count: pages.filter((p) => p.section === s.key).length,
+          }))}
         />
         <SearchInput value={q} onChange={setQ} placeholder="Search all pages…" />
       </div>
@@ -120,7 +151,12 @@ function PagesList() {
             <span className="text-muted-foreground">
               Public address: <span className="font-mono text-foreground">{def.path}/…</span>
             </span>
-            <a href={def.path} target="_blank" rel="noopener" className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
+            <a
+              href={def.path}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+            >
               View section <ExternalLink className="size-3.5" />
             </a>
           </div>
@@ -143,25 +179,47 @@ function PagesList() {
                 {!query && canEdit && (
                   <TableCell>
                     <div className="flex">
-                      <Button variant="ghost" size="icon-xs" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Move up">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        disabled={i === 0}
+                        onClick={() => move(i, -1)}
+                        aria-label="Move up"
+                      >
                         <ArrowUp />
                       </Button>
-                      <Button variant="ghost" size="icon-xs" disabled={i === visible.length - 1} onClick={() => move(i, 1)} aria-label="Move down">
+                      <Button
+                        variant="ghost"
+                        size="icon-xs"
+                        disabled={i === visible.length - 1}
+                        onClick={() => move(i, 1)}
+                        aria-label="Move down"
+                      >
                         <ArrowDown />
                       </Button>
                     </div>
                   </TableCell>
                 )}
                 <TableCell className="max-w-md">
-                  <Link to="/admin/pages/$pageId" params={{ pageId: String(p.id) }} className="flex items-center gap-3 hover:text-primary">
+                  <Link
+                    to="/admin/pages/$pageId"
+                    params={{ pageId: String(p.id) }}
+                    className="flex items-center gap-3 hover:text-primary"
+                  >
                     {p.hero_image_url ? (
-                      <img src={p.hero_image_url} alt="" className="size-10 shrink-0 rounded-md object-cover" />
+                      <img
+                        src={p.hero_image_url}
+                        alt=""
+                        className="size-10 shrink-0 rounded-md object-cover"
+                      />
                     ) : (
                       <span className="size-10 shrink-0 rounded-md bg-gradient-to-br from-primary to-brand-green" />
                     )}
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{p.title}</span>
-                      <span className="block truncate font-mono text-xs text-muted-foreground">/{p.slug}</span>
+                      <span className="block truncate font-mono text-xs text-muted-foreground">
+                        /{p.slug}
+                      </span>
                     </span>
                   </Link>
                 </TableCell>
@@ -184,13 +242,19 @@ function PagesList() {
                 </TableCell>
                 <TableCell className="text-sm whitespace-nowrap text-muted-foreground">
                   {timeAgo(p.updated_at)}
-                  {p.updated_by_name && <span className="block text-xs">by {p.updated_by_name}</span>}
+                  {p.updated_by_name && (
+                    <span className="block text-xs">by {p.updated_by_name}</span>
+                  )}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">
                     {p.status === "published" && (
                       <Button asChild variant="ghost" size="icon-sm" aria-label="View on site">
-                        <a href={`${sectionDef(p.section)?.path}/${p.slug}`} target="_blank" rel="noopener">
+                        <a
+                          href={`${sectionDef(p.section)?.path}/${p.slug}`}
+                          target="_blank"
+                          rel="noopener"
+                        >
                           <ExternalLink />
                         </a>
                       </Button>
@@ -202,10 +266,21 @@ function PagesList() {
                             <Pencil />
                           </Link>
                         </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => duplicate.mutate(p.id)} aria-label="Duplicate">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => duplicate.mutate(p.id)}
+                          aria-label="Duplicate"
+                        >
                           <Copy />
                         </Button>
-                        <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleting(p)} aria-label="Delete">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive"
+                          onClick={() => setDeleting(p)}
+                          aria-label="Delete"
+                        >
                           <Trash2 />
                         </Button>
                       </>
@@ -217,7 +292,11 @@ function PagesList() {
           </TableBody>
         </Table>
         {isLoading && <TableMessage>Loading…</TableMessage>}
-        {!isLoading && visible.length === 0 && <TableMessage>{query ? "No pages match your search." : `No pages in ${def.label} yet.`}</TableMessage>}
+        {!isLoading && visible.length === 0 && (
+          <TableMessage>
+            {query ? "No pages match your search." : `No pages in ${def.label} yet.`}
+          </TableMessage>
+        )}
       </div>
 
       <ConfirmDialog

@@ -25,6 +25,7 @@ const TABS = [
   { key: "home", label: "Home page" },
   { key: "notice", label: "Notice banner" },
   { key: "sections", label: "Section intros" },
+  { key: "directory", label: "Staff directory" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -37,9 +38,15 @@ function SettingsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <AdminPageHeader title="Site settings" description="College details, contact information, home page content and the site-wide notice." />
+      <AdminPageHeader
+        title="Site settings"
+        description="College details, contact information, home page content and the site-wide notice."
+      />
       <div className="flex flex-col gap-6 lg:flex-row">
-        <nav className="flex shrink-0 gap-1 overflow-x-auto lg:w-52 lg:flex-col" aria-label="Settings">
+        <nav
+          className="flex shrink-0 gap-1 overflow-x-auto lg:w-52 lg:flex-col"
+          aria-label="Settings"
+        >
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -47,7 +54,9 @@ function SettingsPage() {
               onClick={() => setTab(t.key)}
               className={cn(
                 "rounded-lg px-3 py-2 text-left text-sm font-medium whitespace-nowrap",
-                tab === t.key ? "bg-white text-primary shadow-sm ring-1 ring-border" : "text-muted-foreground hover:bg-white/60 hover:text-foreground",
+                tab === t.key
+                  ? "bg-white text-primary shadow-sm ring-1 ring-border"
+                  : "text-muted-foreground hover:bg-white/60 hover:text-foreground",
               )}
             >
               {t.label}
@@ -72,6 +81,8 @@ function SettingsPage() {
             </>
           ) : tab === "notice" ? (
             <NoticeCard value={data.notice} />
+          ) : tab === "directory" ? (
+            <DirectoryCard value={data.directory} />
           ) : (
             <SectionsCard value={data.sections} />
           )}
@@ -90,12 +101,18 @@ function useSettingForm<TKey extends SettingsKey>(key: TKey, value: SiteSettings
   useEffect(() => setForm(value), [value]);
   const dirty = JSON.stringify(form) !== JSON.stringify(value);
   const parsed = settingsSchemas[key].safeParse(form);
-  const error = parsed.success ? null : (parsed.error.issues[0] ? `${parsed.error.issues[0].path.join(" › ")}: ${parsed.error.issues[0].message}` : "Invalid");
+  const error = parsed.success
+    ? null
+    : parsed.error.issues[0]
+      ? `${parsed.error.issues[0].path.join(" › ")}: ${parsed.error.issues[0].message}`
+      : "Invalid";
 
   const save = useMutation({
     mutationFn: () => api.put(`/settings/${key}`, form),
     onSuccess: () => {
-      toast.success("Settings saved — the website updates within a few minutes for visitors already browsing.");
+      toast.success(
+        "Settings saved — the website updates within a few minutes for visitors already browsing.",
+      );
       void queryClient.invalidateQueries({ queryKey: ["settings"] });
     },
     onError: errorToast("Couldn't save settings."),
@@ -118,6 +135,56 @@ function useSettingForm<TKey extends SettingsKey>(key: TKey, value: SiteSettings
   return { form, set, footer };
 }
 
+function DirectoryCard({ value }: { value: SiteSettings["directory"] }) {
+  const { form, set, footer } = useSettingForm("directory", value);
+  const [tagText, setTagText] = useState(() => value.expertiseTags.join("\n"));
+  useEffect(() => setTagText(value.expertiseTags.join("\n")), [value]);
+  return (
+    <Panel title="Staff directory" description="Content for the directory home page at /directory.">
+      <div className="grid gap-4">
+        <Field
+          label="Explore by expertise"
+          hint="One topic per line, in display order. Leave empty to show the most common academic interests from staff profiles."
+        >
+          <Textarea
+            rows={8}
+            value={tagText}
+            onChange={(e) => {
+              setTagText(e.target.value);
+              set({
+                expertiseTags: e.target.value
+                  .split("\n")
+                  .map((t) => t.trim())
+                  .filter(Boolean)
+                  .slice(0, 30),
+              });
+            }}
+          />
+        </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field
+            label="Listing requests email"
+            hint="Where “Submit a Listing Request” sends staff. Empty uses the college email."
+          >
+            <Input
+              type="email"
+              value={form.listingEmail}
+              onChange={(e) => set({ listingEmail: e.target.value })}
+            />
+          </Field>
+          <Field label="Who handles requests" hint="Finishes the sentence “Your email goes to …”.">
+            <Input
+              value={form.listingRecipients}
+              onChange={(e) => set({ listingRecipients: e.target.value })}
+            />
+          </Field>
+        </div>
+      </div>
+      {footer}
+    </Panel>
+  );
+}
+
 function IdentityCard({ value }: { value: SiteSettings["identity"] }) {
   const { form, set, footer } = useSettingForm("identity", value);
   return (
@@ -136,7 +203,11 @@ function IdentityCard({ value }: { value: SiteSettings["identity"] }) {
           <Input value={form.tagline} onChange={(e) => set({ tagline: e.target.value })} />
         </Field>
         <Field label="Footer description" className="sm:col-span-2">
-          <Textarea rows={3} value={form.footerText} onChange={(e) => set({ footerText: e.target.value })} />
+          <Textarea
+            rows={3}
+            value={form.footerText}
+            onChange={(e) => set({ footerText: e.target.value })}
+          />
         </Field>
       </div>
       {footer}
@@ -150,10 +221,17 @@ function ContactCard({ value }: { value: SiteSettings["contact"] }) {
     <Panel title="Contact details" description="Used in the header, footer and Contact blocks.">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Address" className="sm:row-span-2">
-          <Textarea rows={4} value={form.address} onChange={(e) => set({ address: e.target.value })} />
+          <Textarea
+            rows={4}
+            value={form.address}
+            onChange={(e) => set({ address: e.target.value })}
+          />
         </Field>
         <Field label="Postal address">
-          <Input value={form.postalAddress} onChange={(e) => set({ postalAddress: e.target.value })} />
+          <Input
+            value={form.postalAddress}
+            onChange={(e) => set({ postalAddress: e.target.value })}
+          />
         </Field>
         <Field label="Office hours">
           <Input value={form.officeHours} onChange={(e) => set({ officeHours: e.target.value })} />
@@ -192,7 +270,11 @@ function SocialsCard({ value }: { value: SiteSettings["socials"] }) {
       <div className="grid gap-4 sm:grid-cols-2">
         {SOCIAL_PLATFORMS.map((p) => (
           <Field key={p} label={SOCIAL_LABELS[p]}>
-            <Input value={form[p]} onChange={(e) => set({ [p]: e.target.value.trim() })} placeholder="https://" />
+            <Input
+              value={form[p]}
+              onChange={(e) => set({ [p]: e.target.value.trim() })}
+              placeholder="https://"
+            />
           </Field>
         ))}
       </div>
@@ -204,12 +286,23 @@ function SocialsCard({ value }: { value: SiteSettings["socials"] }) {
 function NoticeCard({ value }: { value: SiteSettings["notice"] }) {
   const { form, set, footer } = useSettingForm("notice", value);
   return (
-    <Panel title="Notice banner" description="A dismissible strip above the header on every page — for urgent or time-limited information.">
+    <Panel
+      title="Notice banner"
+      description="A dismissible strip above the header on every page — for urgent or time-limited information."
+    >
       <div className="grid gap-4">
-        <Switch label="Show the notice" checked={form.enabled} onChange={(enabled) => set({ enabled })} />
+        <Switch
+          label="Show the notice"
+          checked={form.enabled}
+          onChange={(enabled) => set({ enabled })}
+        />
         <div className="grid gap-4 sm:grid-cols-[160px_1fr]">
           <Field label="Label">
-            <Input value={form.label} onChange={(e) => set({ label: e.target.value })} placeholder="Important" />
+            <Input
+              value={form.label}
+              onChange={(e) => set({ label: e.target.value })}
+              placeholder="Important"
+            />
           </Field>
           <Field label="Headline">
             <Input value={form.title} onChange={(e) => set({ title: e.target.value })} />
@@ -222,14 +315,24 @@ function NoticeCard({ value }: { value: SiteSettings["notice"] }) {
           <Field label="Button label">
             <Input value={form.linkLabel} onChange={(e) => set({ linkLabel: e.target.value })} />
           </Field>
-          <LinkField label="Button link" value={form.linkUrl} onChange={(linkUrl) => set({ linkUrl })} />
+          <LinkField
+            label="Button link"
+            value={form.linkUrl}
+            onChange={(linkUrl) => set({ linkUrl })}
+          />
           <Field label="Hide automatically after" hint="Optional">
-            <Input type="date" value={form.expiresOn} onChange={(e) => set({ expiresOn: e.target.value })} />
+            <Input
+              type="date"
+              value={form.expiresOn}
+              onChange={(e) => set({ expiresOn: e.target.value })}
+            />
           </Field>
         </div>
         {form.enabled && form.title && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
-            <span className="mr-2 rounded-full bg-amber-200/70 px-2 py-0.5 text-xs font-semibold text-amber-900">{form.label}</span>
+            <span className="mr-2 rounded-full bg-amber-200/70 px-2 py-0.5 text-xs font-semibold text-amber-900">
+              {form.label}
+            </span>
             <span className="font-bold">{form.title}</span>
             {form.text && <p className="mt-0.5 text-slate-600">{form.text}</p>}
           </div>
@@ -245,7 +348,13 @@ function WelcomeCard({ value }: { value: SiteSettings["welcome"] }) {
   return (
     <Panel title="Welcome message" description="The Principal's welcome on the home page.">
       <div className="grid gap-5 md:grid-cols-[200px_1fr]">
-        <ImageField label="Photo" aspect="portrait" folder="settings" value={form.photoUrl} onChange={(url) => set({ photoUrl: url ?? "" })} />
+        <ImageField
+          label="Photo"
+          aspect="portrait"
+          folder="settings"
+          value={form.photoUrl}
+          onChange={(url) => set({ photoUrl: url ?? "" })}
+        />
         <div className="grid content-start gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Small heading">
@@ -262,13 +371,21 @@ function WelcomeCard({ value }: { value: SiteSettings["welcome"] }) {
             </Field>
           </div>
           <Field label="Message">
-            <Textarea rows={6} value={form.message} onChange={(e) => set({ message: e.target.value })} />
+            <Textarea
+              rows={6}
+              value={form.message}
+              onChange={(e) => set({ message: e.target.value })}
+            />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Button label">
               <Input value={form.linkLabel} onChange={(e) => set({ linkLabel: e.target.value })} />
             </Field>
-            <LinkField label="Button link" value={form.linkUrl} onChange={(linkUrl) => set({ linkUrl })} />
+            <LinkField
+              label="Button link"
+              value={form.linkUrl}
+              onChange={(linkUrl) => set({ linkUrl })}
+            />
           </div>
         </div>
       </div>
@@ -288,9 +405,23 @@ function QuickLinksCard({ value }: { value: SiteSettings["quickLinks"] }) {
         addLabel="Add link"
         render={(item, update) => (
           <div className="grid gap-2 sm:grid-cols-[1fr_1fr_140px_auto] sm:items-center">
-            <Input value={item.label} onChange={(e) => update({ label: e.target.value })} placeholder="Label" />
-            <Input value={item.url} onChange={(e) => update({ url: e.target.value.trim() })} placeholder="/admissions or https://…" />
-            <select value={item.icon} onChange={(e) => update({ icon: e.target.value as (typeof QUICK_LINK_ICONS)[number] })} className="h-9 rounded-md border border-input bg-white px-2 text-sm capitalize">
+            <Input
+              value={item.label}
+              onChange={(e) => update({ label: e.target.value })}
+              placeholder="Label"
+            />
+            <Input
+              value={item.url}
+              onChange={(e) => update({ url: e.target.value.trim() })}
+              placeholder="/admissions or https://…"
+            />
+            <select
+              value={item.icon}
+              onChange={(e) =>
+                update({ icon: e.target.value as (typeof QUICK_LINK_ICONS)[number] })
+              }
+              className="h-9 rounded-md border border-input bg-white px-2 text-sm capitalize"
+            >
               {QUICK_LINK_ICONS.map((i) => (
                 <option key={i} value={i}>
                   {i}
@@ -298,7 +429,12 @@ function QuickLinksCard({ value }: { value: SiteSettings["quickLinks"] }) {
               ))}
             </select>
             <label className="flex items-center gap-1.5 text-xs whitespace-nowrap">
-              <input type="checkbox" checked={item.highlight} onChange={(e) => update({ highlight: e.target.checked })} /> Highlight
+              <input
+                type="checkbox"
+                checked={item.highlight}
+                onChange={(e) => update({ highlight: e.target.checked })}
+              />{" "}
+              Highlight
             </label>
           </div>
         )}
@@ -328,10 +464,31 @@ function StatsCard({ value }: { value: SiteSettings["stats"] }) {
           addLabel="Add figure"
           render={(item, update) => (
             <div className="grid gap-2 sm:grid-cols-[110px_70px_1fr_1fr]">
-              <Input type="number" min={0} value={item.value} onChange={(e) => update({ value: Math.max(0, Math.round(Number(e.target.value) || 0)) })} aria-label="Number" />
-              <Input value={item.suffix} onChange={(e) => update({ suffix: e.target.value })} placeholder="+" aria-label="Suffix" />
-              <Input value={item.label} onChange={(e) => update({ label: e.target.value })} placeholder="Label" />
-              <Input value={item.note} onChange={(e) => update({ note: e.target.value })} placeholder="Note" />
+              <Input
+                type="number"
+                min={0}
+                value={item.value}
+                onChange={(e) =>
+                  update({ value: Math.max(0, Math.round(Number(e.target.value) || 0)) })
+                }
+                aria-label="Number"
+              />
+              <Input
+                value={item.suffix}
+                onChange={(e) => update({ suffix: e.target.value })}
+                placeholder="+"
+                aria-label="Suffix"
+              />
+              <Input
+                value={item.label}
+                onChange={(e) => update({ label: e.target.value })}
+                placeholder="Label"
+              />
+              <Input
+                value={item.note}
+                onChange={(e) => update({ note: e.target.value })}
+                placeholder="Note"
+              />
             </div>
           )}
         />
@@ -344,7 +501,10 @@ function StatsCard({ value }: { value: SiteSettings["stats"] }) {
 function CtaCard({ value }: { value: SiteSettings["cta"] }) {
   const { form, set, footer } = useSettingForm("cta", value);
   return (
-    <Panel title="Admissions call to action" description="The green band near the bottom of the home page.">
+    <Panel
+      title="Admissions call to action"
+      description="The green band near the bottom of the home page."
+    >
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Title">
           <Input value={form.title} onChange={(e) => set({ title: e.target.value })} />
@@ -356,13 +516,27 @@ function CtaCard({ value }: { value: SiteSettings["cta"] }) {
           <Textarea rows={2} value={form.text} onChange={(e) => set({ text: e.target.value })} />
         </Field>
         <Field label="Main button label">
-          <Input value={form.primaryLabel} onChange={(e) => set({ primaryLabel: e.target.value })} />
+          <Input
+            value={form.primaryLabel}
+            onChange={(e) => set({ primaryLabel: e.target.value })}
+          />
         </Field>
-        <LinkField label="Main button link" value={form.primaryUrl} onChange={(primaryUrl) => set({ primaryUrl })} />
+        <LinkField
+          label="Main button link"
+          value={form.primaryUrl}
+          onChange={(primaryUrl) => set({ primaryUrl })}
+        />
         <Field label="Second button label">
-          <Input value={form.secondaryLabel} onChange={(e) => set({ secondaryLabel: e.target.value })} />
+          <Input
+            value={form.secondaryLabel}
+            onChange={(e) => set({ secondaryLabel: e.target.value })}
+          />
         </Field>
-        <LinkField label="Second button link" value={form.secondaryUrl} onChange={(secondaryUrl) => set({ secondaryUrl })} />
+        <LinkField
+          label="Second button link"
+          value={form.secondaryUrl}
+          onChange={(secondaryUrl) => set({ secondaryUrl })}
+        />
       </div>
       {footer}
     </Panel>
@@ -372,13 +546,28 @@ function CtaCard({ value }: { value: SiteSettings["cta"] }) {
 function SectionsCard({ value }: { value: SiteSettings["sections"] }) {
   const { form, set, footer } = useSettingForm("sections", value);
   return (
-    <Panel title="Section landing pages" description="Introductions and banner images for /about, /academics, /admissions, /student-life and /alumni. Leave blank to use the defaults.">
+    <Panel
+      title="Section landing pages"
+      description="Introductions and banner images for /about, /academics, /admissions, /student-life and /alumni. Leave blank to use the defaults."
+    >
       <div className="grid gap-6">
         {SECTIONS.map((s) => (
-          <div key={s.key} className="grid gap-4 border-b border-border pb-6 last:border-0 last:pb-0 md:grid-cols-[220px_1fr]">
-            <ImageField label={s.label} folder="settings" value={form[s.key].imageUrl} onChange={(url) => set({ [s.key]: { ...form[s.key], imageUrl: url ?? "" } })} />
+          <div
+            key={s.key}
+            className="grid gap-4 border-b border-border pb-6 last:border-0 last:pb-0 md:grid-cols-[220px_1fr]"
+          >
+            <ImageField
+              label={s.label}
+              folder="settings"
+              value={form[s.key].imageUrl}
+              onChange={(url) => set({ [s.key]: { ...form[s.key], imageUrl: url ?? "" } })}
+            />
             <Field label="Introduction" hint={`Default: ${s.intro}`}>
-              <Textarea rows={4} value={form[s.key].intro} onChange={(e) => set({ [s.key]: { ...form[s.key], intro: e.target.value } })} />
+              <Textarea
+                rows={4}
+                value={form[s.key].intro}
+                onChange={(e) => set({ [s.key]: { ...form[s.key], intro: e.target.value } })}
+              />
             </Field>
           </div>
         ))}

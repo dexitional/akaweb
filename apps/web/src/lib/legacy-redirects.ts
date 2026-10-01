@@ -65,7 +65,9 @@ export function legacyRedirect(pathname: string): string | null {
     case "departments":
       return `/academics/departments/${LEGACY_DEPARTMENT_SLUGS[second] ?? second}`;
     case "units-of-the-college":
-      return LEGACY_UNIT_SLUGS[second] ? `/academics/units/${LEGACY_UNIT_SLUGS[second]}` : "/academics/units";
+      return LEGACY_UNIT_SLUGS[second]
+        ? `/academics/units/${LEGACY_UNIT_SLUGS[second]}`
+        : "/academics/units";
     default:
       return null;
   }

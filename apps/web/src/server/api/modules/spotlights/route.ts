@@ -4,7 +4,13 @@ import { getPool } from "@aka/db";
 import type { SpotlightRow } from "@aka/db";
 import type { RowDataPacket } from "mysql2";
 import { requirePermission } from "../../middleware/require-auth.js";
-import { optionalDate, optionalLink, optionalText, reorderSchema, urlSchema } from "../../lib/fields.js";
+import {
+  optionalDate,
+  optionalLink,
+  optionalText,
+  reorderSchema,
+  urlSchema,
+} from "../../lib/fields.js";
 import { deleteRow, findById, insertRow, reorderRows, updateRow } from "../../lib/columns.js";
 import { idParam } from "../../lib/query.js";
 import { logActivity } from "../../lib/activity.js";
@@ -43,17 +49,32 @@ const get = (id: number) => findById<SpotlightRow>("spotlights", id, "Spotlight"
 
 export const spotlightsRoute = new Hono()
   .get("/", requirePermission("spotlights", "view"), async (c) => {
-    const [rows] = await getPool().query<RowDataPacket[]>("SELECT * FROM spotlights ORDER BY sort_order, id DESC");
+    const [rows] = await getPool().query<RowDataPacket[]>(
+      "SELECT * FROM spotlights ORDER BY sort_order, id DESC",
+    );
     return c.json({ spotlights: rows });
   })
   .use("*", requirePermission("spotlights", "manage"))
   .post("/", validate("json", fields), async (c) => {
     const input = c.req.valid("json");
-    const [rows] = await getPool().query<RowDataPacket[]>("SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM spotlights");
-    const id = await insertRow("spotlights", { sortOrder: Number(rows[0]?.next ?? 0), ...input }, FIELDS, {
-      created_by: c.get("admin").id,
-    });
-    logActivity(c.get("admin").id, "created", "spotlight", id, `Created spotlight “${input.title}”`);
+    const [rows] = await getPool().query<RowDataPacket[]>(
+      "SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM spotlights",
+    );
+    const id = await insertRow(
+      "spotlights",
+      { sortOrder: Number(rows[0]?.next ?? 0), ...input },
+      FIELDS,
+      {
+        created_by: c.get("admin").id,
+      },
+    );
+    logActivity(
+      c.get("admin").id,
+      "created",
+      "spotlight",
+      id,
+      `Created spotlight “${input.title}”`,
+    );
     return c.json({ spotlight: await get(id) }, 201);
   })
   .post("/reorder", validate("json", reorderSchema), async (c) => {
@@ -65,13 +86,25 @@ export const spotlightsRoute = new Hono()
     const id = idParam(c.req.param("id"));
     const current = await get(id);
     await updateRow("spotlights", id, c.req.valid("json"), FIELDS);
-    logActivity(c.get("admin").id, "updated", "spotlight", id, `Updated spotlight “${c.req.valid("json").title ?? current.title}”`);
+    logActivity(
+      c.get("admin").id,
+      "updated",
+      "spotlight",
+      id,
+      `Updated spotlight “${c.req.valid("json").title ?? current.title}”`,
+    );
     return c.json({ spotlight: await get(id) });
   })
   .delete("/:id", async (c) => {
     const id = idParam(c.req.param("id"));
     const current = await get(id);
     await deleteRow("spotlights", id, "Spotlight");
-    logActivity(c.get("admin").id, "deleted", "spotlight", id, `Deleted spotlight “${current.title}”`);
+    logActivity(
+      c.get("admin").id,
+      "deleted",
+      "spotlight",
+      id,
+      `Deleted spotlight “${current.title}”`,
+    );
     return c.body(null, 204);
   });

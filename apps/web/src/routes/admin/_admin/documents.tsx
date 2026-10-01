@@ -9,14 +9,36 @@ import { DOCUMENT_CATEGORIES, documentCategoryLabel } from "#/lib/content";
 import type { DocumentCategory } from "#/lib/content";
 import { canManage } from "#/lib/permissions";
 import { formatBytes, formatDate, todayIso } from "#/lib/format";
-import { AdminPageHeader, ConfirmDialog, Field, SearchInput, StatusPill, Switch, TableMessage, errorToast } from "#/components/admin/ui";
+import {
+  AdminPageHeader,
+  ConfirmDialog,
+  Field,
+  SearchInput,
+  StatusPill,
+  Switch,
+  TableMessage,
+  errorToast,
+} from "#/components/admin/ui";
 import { FileField } from "#/components/admin/media-fields";
 import { Pagination } from "#/components/admin/pagination";
 import { Button } from "#/components/ui/button.tsx";
 import { Input } from "#/components/ui/input.tsx";
 import { Textarea } from "#/components/ui/textarea.tsx";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "#/components/ui/table.tsx";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "#/components/ui/dialog.tsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "#/components/ui/table.tsx";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "#/components/ui/dialog.tsx";
 
 export const Route = createFileRoute("/admin/_admin/documents")({
   component: DocumentsPage,
@@ -36,7 +58,13 @@ function DocumentsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["documents", { category, q, page }],
-    queryFn: () => api.get<{ items: Array<DocumentRow>; total: number }>("/documents", { category: category || undefined, q: q.trim() || undefined, page, pageSize: PAGE_SIZE }),
+    queryFn: () =>
+      api.get<{ items: Array<DocumentRow>; total: number }>("/documents", {
+        category: category || undefined,
+        q: q.trim() || undefined,
+        page,
+        pageSize: PAGE_SIZE,
+      }),
     placeholderData: keepPreviousData,
   });
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["documents"] });
@@ -119,13 +147,16 @@ function DocumentsPage() {
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{d.title}</span>
                       <span className="block truncate text-xs text-muted-foreground">
-                        {d.file_name ?? d.file_url.split("/").pop()} {d.size_bytes ? `· ${formatBytes(d.size_bytes)}` : ""}
+                        {d.file_name ?? d.file_url.split("/").pop()}{" "}
+                        {d.size_bytes ? `· ${formatBytes(d.size_bytes)}` : ""}
                       </span>
                     </span>
                   </div>
                 </TableCell>
                 <TableCell className="text-sm">{documentCategoryLabel(d.category)}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{formatDate(d.published_on)}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">
+                  {formatDate(d.published_on)}
+                </TableCell>
                 <TableCell className="text-right text-sm tabular-nums">
                   <span className="inline-flex items-center gap-1 text-muted-foreground">
                     <Download className="size-3.5" aria-hidden="true" />
@@ -133,7 +164,10 @@ function DocumentsPage() {
                   </span>
                 </TableCell>
                 <TableCell>
-                  <StatusPill status={d.is_published ? "published" : "hidden"} label={d.is_published ? "Published" : "Hidden"} />
+                  <StatusPill
+                    status={d.is_published ? "published" : "hidden"}
+                    label={d.is_published ? "Published" : "Hidden"}
+                  />
                 </TableCell>
                 <TableCell>
                   <div className="flex justify-end gap-1">
@@ -144,10 +178,21 @@ function DocumentsPage() {
                     </Button>
                     {canEdit && (
                       <>
-                        <Button variant="ghost" size="icon-sm" onClick={() => setEditing(d)} aria-label="Edit">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setEditing(d)}
+                          aria-label="Edit"
+                        >
                           <Pencil />
                         </Button>
-                        <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleting(d)} aria-label="Delete">
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-destructive"
+                          onClick={() => setDeleting(d)}
+                          aria-label="Delete"
+                        >
                           <Trash2 />
                         </Button>
                       </>
@@ -160,7 +205,12 @@ function DocumentsPage() {
         </Table>
         {isLoading && <TableMessage>Loading…</TableMessage>}
         {!isLoading && data?.items.length === 0 && <TableMessage>No documents yet.</TableMessage>}
-        <Pagination page={page} pageSize={PAGE_SIZE} total={data?.total ?? 0} onPageChange={setPage} />
+        <Pagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={data?.total ?? 0}
+          onPageChange={setPage}
+        />
       </div>
       <DocumentDialog editing={editing} onClose={() => setEditing(null)} onSaved={invalidate} />
       <ConfirmDialog
@@ -187,7 +237,15 @@ const blank = () => ({
   publishedOn: todayIso(),
 });
 
-function DocumentDialog({ editing, onClose, onSaved }: { editing: DocumentRow | "new" | null; onClose: () => void; onSaved: () => void }) {
+function DocumentDialog({
+  editing,
+  onClose,
+  onSaved,
+}: {
+  editing: DocumentRow | "new" | null;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   const [form, setForm] = useState(blank());
   const set = (patch: Partial<typeof form>) => setForm((f) => ({ ...f, ...patch }));
   useEffect(() => {
@@ -210,7 +268,10 @@ function DocumentDialog({ editing, onClose, onSaved }: { editing: DocumentRow | 
   }, [editing]);
 
   const save = useMutation({
-    mutationFn: () => (editing === "new" ? api.post("/documents", form) : api.patch(`/documents/${(editing as DocumentRow).id}`, form)),
+    mutationFn: () =>
+      editing === "new"
+        ? api.post("/documents", form)
+        : api.patch(`/documents/${(editing as DocumentRow).id}`, form),
     onSuccess: () => {
       toast.success("Saved.");
       onSaved();
@@ -235,7 +296,9 @@ function DocumentDialog({ editing, onClose, onSaved }: { editing: DocumentRow | 
               fileName: asset?.filename ?? "",
               mimeType: asset?.mime_type ?? "",
               sizeBytes: asset?.size_bytes ?? null,
-              ...(asset && !form.title ? { title: asset.filename.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ") } : {}),
+              ...(asset && !form.title
+                ? { title: asset.filename.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ") }
+                : {}),
             })
           }
         />
@@ -244,7 +307,11 @@ function DocumentDialog({ editing, onClose, onSaved }: { editing: DocumentRow | 
         </Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Category">
-            <select value={form.category} onChange={(e) => set({ category: e.target.value as DocumentCategory })} className="h-9 rounded-md border border-input bg-white px-3 text-sm">
+            <select
+              value={form.category}
+              onChange={(e) => set({ category: e.target.value as DocumentCategory })}
+              className="h-9 rounded-md border border-input bg-white px-3 text-sm"
+            >
               {DOCUMENT_CATEGORIES.map((c) => (
                 <option key={c.key} value={c.key}>
                   {c.label}
@@ -253,18 +320,34 @@ function DocumentDialog({ editing, onClose, onSaved }: { editing: DocumentRow | 
             </select>
           </Field>
           <Field label="Date">
-            <Input type="date" value={form.publishedOn} onChange={(e) => set({ publishedOn: e.target.value })} />
+            <Input
+              type="date"
+              value={form.publishedOn}
+              onChange={(e) => set({ publishedOn: e.target.value })}
+            />
           </Field>
         </div>
         <Field label="Description">
-          <Textarea rows={2} value={form.description} onChange={(e) => set({ description: e.target.value })} maxLength={500} />
+          <Textarea
+            rows={2}
+            value={form.description}
+            onChange={(e) => set({ description: e.target.value })}
+            maxLength={500}
+          />
         </Field>
-        <Switch label="Published" checked={form.isPublished} onChange={(isPublished) => set({ isPublished })} />
+        <Switch
+          label="Published"
+          checked={form.isPublished}
+          onChange={(isPublished) => set({ isPublished })}
+        />
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button disabled={!form.fileUrl || form.title.trim().length < 3 || save.isPending} onClick={() => save.mutate()}>
+          <Button
+            disabled={!form.fileUrl || form.title.trim().length < 3 || save.isPending}
+            onClick={() => save.mutate()}
+          >
             {save.isPending ? "Saving…" : "Save"}
           </Button>
         </DialogFooter>

@@ -25,7 +25,13 @@ const listQuerySchema = pageQuerySchema.extend({ status: status.optional().catch
 const MAX_PER_HOUR = 5;
 
 function clientIp(headers: Headers) {
-  return (headers.get("cf-connecting-ip") ?? headers.get("x-forwarded-for")?.split(",")[0] ?? "").trim() || null;
+  return (
+    (
+      headers.get("cf-connecting-ip") ??
+      headers.get("x-forwarded-for")?.split(",")[0] ??
+      ""
+    ).trim() || null
+  );
 }
 
 export const messagesRoute = new Hono()
@@ -73,7 +79,9 @@ export const messagesRoute = new Hono()
         [...params, limit, offset],
       ),
       pool.query<RowDataPacket[]>(`SELECT COUNT(*) AS n FROM contact_messages ${clause}`, params),
-      pool.query<RowDataPacket[]>("SELECT status, COUNT(*) AS n FROM contact_messages GROUP BY status"),
+      pool.query<RowDataPacket[]>(
+        "SELECT status, COUNT(*) AS n FROM contact_messages GROUP BY status",
+      ),
     ]);
     return c.json({
       items: rows,
@@ -81,12 +89,17 @@ export const messagesRoute = new Hono()
       counts: Object.fromEntries(counts.map((r) => [r.status, Number(r.n)])),
     });
   })
-  .patch("/:id", requirePermission("messages", "view"), validate("json", z.object({ status })), async (c) => {
-    const id = idParam(c.req.param("id"));
-    await findById("contact_messages", id, "Message");
-    await updateRow("contact_messages", id, c.req.valid("json"), { status: "status" });
-    return c.json({ ok: true });
-  })
+  .patch(
+    "/:id",
+    requirePermission("messages", "view"),
+    validate("json", z.object({ status })),
+    async (c) => {
+      const id = idParam(c.req.param("id"));
+      await findById("contact_messages", id, "Message");
+      await updateRow("contact_messages", id, c.req.valid("json"), { status: "status" });
+      return c.json({ ok: true });
+    },
+  )
   .delete("/:id", requirePermission("messages", "manage"), async (c) => {
     await deleteRow("contact_messages", idParam(c.req.param("id")), "Message");
     return c.body(null, 204);

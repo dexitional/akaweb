@@ -56,7 +56,14 @@ export function formatEventRange(start: string, end: string | null) {
   const b = parse(end);
   const sameYear = a.getUTCFullYear() === b.getUTCFullYear();
   const sameMonth = sameYear && a.getUTCMonth() === b.getUTCMonth();
-  const left = fmt(start, sameMonth ? { day: "numeric" } : sameYear ? { day: "numeric", month: "short" } : { day: "numeric", month: "short", year: "numeric" });
+  const left = fmt(
+    start,
+    sameMonth
+      ? { day: "numeric" }
+      : sameYear
+        ? { day: "numeric", month: "short" }
+        : { day: "numeric", month: "short", year: "numeric" },
+  );
   return `${left} – ${formatDate(end)}`;
 }
 
@@ -101,7 +108,10 @@ export function timeAgo(value: string) {
 // Rough reading time for an HTML body.
 export function readingMinutes(html: string | null) {
   if (!html) return 1;
-  const words = html.replace(/<[^>]*>/g, " ").split(/\s+/).filter(Boolean).length;
+  const words = html
+    .replace(/<[^>]*>/g, " ")
+    .split(/\s+/)
+    .filter(Boolean).length;
   return Math.max(1, Math.round(words / 220));
 }
 

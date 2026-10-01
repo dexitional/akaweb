@@ -83,7 +83,11 @@ export async function listPosts(
   return {
     items: rows,
     total: Number(countRows[0]?.n ?? 0),
-    counts: statusRows.map((r) => ({ type: r.type as string, status: r.status as string, n: Number(r.n) })),
+    counts: statusRows.map((r) => ({
+      type: r.type as string,
+      status: r.status as string,
+      n: Number(r.n),
+    })),
   };
 }
 
@@ -101,13 +105,20 @@ export async function getPost(id: number) {
 function assertCanEdit(admin: AdminSessionUser, post: Pick<PostRow, "author_id" | "status">) {
   if (canPublishPosts(admin.role)) return;
   if (post.author_id !== admin.id) throw new AppError("You can only edit your own posts.", 403);
-  if (post.status !== "draft") throw new AppError("This post has been published — ask an editor to change it.", 403);
+  if (post.status !== "draft")
+    throw new AppError("This post has been published — ask an editor to change it.", 403);
 }
 
-async function resolveSlug(type: string, title: string, slug: string | undefined, excludeId?: number) {
+async function resolveSlug(
+  type: string,
+  title: string,
+  slug: string | undefined,
+  excludeId?: number,
+) {
   if (!slug) return uniqueSlug("posts", title, { column: "type", value: type }, excludeId);
   const free = await uniqueSlug("posts", slug, { column: "type", value: type }, excludeId);
-  if (free !== slugify(slug)) throw new AppError(`Another ${type} already uses the address “${slug}”.`, 409);
+  if (free !== slugify(slug))
+    throw new AppError(`Another ${type} already uses the address “${slug}”.`, 409);
   return free;
 }
 
@@ -121,11 +132,21 @@ export async function createPost(admin: AdminSessionUser, input: z.infer<typeof 
     author_id: admin.id,
     updated_by: admin.id,
   });
-  logActivity(admin.id, status === "published" ? "published" : "created", "post", id, `Created ${LABELS[input.type]} “${input.title}”`);
+  logActivity(
+    admin.id,
+    status === "published" ? "published" : "created",
+    "post",
+    id,
+    `Created ${LABELS[input.type]} “${input.title}”`,
+  );
   return getPost(id);
 }
 
-export async function updatePost(admin: AdminSessionUser, id: number, input: z.infer<typeof updatePostSchema>) {
+export async function updatePost(
+  admin: AdminSessionUser,
+  id: number,
+  input: z.infer<typeof updatePostSchema>,
+) {
   const current = await findById<PostRow>("posts", id, "Post");
   assertCanEdit(admin, current);
 
@@ -142,11 +163,18 @@ export async function updatePost(admin: AdminSessionUser, id: number, input: z.i
     delete patch.isFeatured;
     delete patch.isPinned;
   }
-  if (input.slug !== undefined) patch.slug = await resolveSlug(current.type, input.title ?? current.title, input.slug, id);
+  if (input.slug !== undefined)
+    patch.slug = await resolveSlug(current.type, input.title ?? current.title, input.slug, id);
 
   await updateRow("posts", id, patch, FIELDS, { updated_by: admin.id });
   const publishing = patch.status === "published" && current.status !== "published";
-  logActivity(admin.id, publishing ? "published" : "updated", "post", id, `${publishing ? "Published" : "Updated"} ${LABELS[current.type]} “${input.title ?? current.title}”`);
+  logActivity(
+    admin.id,
+    publishing ? "published" : "updated",
+    "post",
+    id,
+    `${publishing ? "Published" : "Updated"} ${LABELS[current.type]} “${input.title ?? current.title}”`,
+  );
   return getPost(id);
 }
 
@@ -154,5 +182,11 @@ export async function deletePost(admin: AdminSessionUser, id: number) {
   const current = await findById<PostRow>("posts", id, "Post");
   assertCanEdit(admin, current);
   await deleteRow("posts", id, "Post");
-  logActivity(admin.id, "deleted", "post", id, `Deleted ${LABELS[current.type]} “${current.title}”`);
+  logActivity(
+    admin.id,
+    "deleted",
+    "post",
+    id,
+    `Deleted ${LABELS[current.type]} “${current.title}”`,
+  );
 }

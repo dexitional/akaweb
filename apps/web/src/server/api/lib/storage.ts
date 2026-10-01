@@ -1,18 +1,28 @@
 // Cloudflare R2 (S3-compatible) — every CMS asset lives here. Browsers upload
 // straight to the bucket with a short-lived presigned PUT, so file bytes
 // never pass through the app server.
-import { DeleteObjectCommand, PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { AppError } from "../middleware/error-handler.js";
 
 let client: S3Client | undefined;
 
 function config() {
-  const { R2_ENDPOINT, R2_ACCESS_KEY, R2_SECRET_KEY, R2_BUCKET_NAME, R2_PUBLIC_DOMAIN } = process.env;
+  const { R2_ENDPOINT, R2_ACCESS_KEY, R2_SECRET_KEY, R2_BUCKET_NAME, R2_PUBLIC_DOMAIN } =
+    process.env;
   // Unset, or still a placeholder from .env.example.
   const missing = (v: string | undefined) => !v || /your[_-]/i.test(v);
   if (
-    !R2_ENDPOINT || !R2_ACCESS_KEY || !R2_SECRET_KEY || !R2_BUCKET_NAME || !R2_PUBLIC_DOMAIN ||
+    !R2_ENDPOINT ||
+    !R2_ACCESS_KEY ||
+    !R2_SECRET_KEY ||
+    !R2_BUCKET_NAME ||
+    !R2_PUBLIC_DOMAIN ||
     [R2_ENDPOINT, R2_ACCESS_KEY, R2_SECRET_KEY].some(missing)
   ) {
     throw new AppError("File storage isn't configured. Set the R2_* environment variables.", 400);
@@ -44,13 +54,31 @@ export async function createPresignedUpload(key: string, contentType: string, si
     ContentLength: size,
     CacheControl: "public, max-age=31536000, immutable",
   });
-  const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 600, signableHeaders: new Set(["content-type", "content-length"]) });
+  const uploadUrl = await getSignedUrl(s3, command, {
+    expiresIn: 600,
+    signableHeaders: new Set(["content-type", "content-length"]),
+  });
   return { uploadUrl, publicUrl: publicUrlFor(key) };
 }
 
 export async function deleteObject(key: string) {
   const { s3, bucket } = config();
   await s3.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+// Reads an object straight from the bucket (the image optimiser uses this
+// instead of the public URL, which may be a rate-limited r2.dev address).
+export async function readObject(key: string, signal?: AbortSignal) {
+  const { s3, bucket } = config();
+  const res = await s3.send(new GetObjectCommand({ Bucket: bucket, Key: key }), {
+    abortSignal: signal,
+  });
+  if (!res.Body) throw new Error(`Empty object: ${key}`);
+  return {
+    body: Buffer.from(await res.Body.transformToByteArray()),
+    contentType: res.ContentType ?? "",
+    size: res.ContentLength ?? 0,
+  };
 }
 
 // Only keys under our public domain belong to us.

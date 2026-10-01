@@ -8,7 +8,13 @@ import { api } from "#/lib/api-client";
 import { canManage } from "#/lib/permissions";
 import { formatDateTime, timeAgo } from "#/lib/format";
 import { cn } from "#/lib/utils";
-import { AdminPageHeader, ConfirmDialog, SearchInput, Segmented, errorToast } from "#/components/admin/ui";
+import {
+  AdminPageHeader,
+  ConfirmDialog,
+  SearchInput,
+  Segmented,
+  errorToast,
+} from "#/components/admin/ui";
 import { Pagination } from "#/components/admin/pagination";
 import { Button } from "#/components/ui/button.tsx";
 
@@ -33,19 +39,23 @@ function MessagesPage() {
   const { data } = useQuery({
     queryKey: ["messages", { filter, q, page }],
     queryFn: () =>
-      api.get<{ items: Array<ContactMessageRow>; total: number; counts: Record<string, number> }>("/messages", {
-        status: filter === "inbox" ? undefined : filter,
-        q: q.trim() || undefined,
-        page,
-        pageSize: PAGE_SIZE,
-      }),
+      api.get<{ items: Array<ContactMessageRow>; total: number; counts: Record<string, number> }>(
+        "/messages",
+        {
+          status: filter === "inbox" ? undefined : filter,
+          q: q.trim() || undefined,
+          page,
+          pageSize: PAGE_SIZE,
+        },
+      ),
     placeholderData: keepPreviousData,
   });
   const items = data?.items ?? [];
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["messages"] });
 
   const setStatus = useMutation({
-    mutationFn: ({ id, status }: { id: number; status: ContactMessageRow["status"] }) => api.patch(`/messages/${id}`, { status }),
+    mutationFn: ({ id, status }: { id: number; status: ContactMessageRow["status"] }) =>
+      api.patch(`/messages/${id}`, { status }),
     onSuccess: invalidate,
     onError: errorToast("Couldn't update the message."),
   });
@@ -111,21 +121,50 @@ function MessagesPage() {
                   <button
                     type="button"
                     onClick={() => setSelected(m)}
-                    className={cn("block w-full px-4 py-3 text-left transition-colors hover:bg-secondary/60", selected?.id === m.id && "bg-secondary")}
+                    className={cn(
+                      "block w-full px-4 py-3 text-left transition-colors hover:bg-secondary/60",
+                      selected?.id === m.id && "bg-secondary",
+                    )}
                   >
                     <div className="flex items-center gap-2">
-                      {m.status === "new" && <span className="size-2 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
-                      <span className={cn("min-w-0 flex-1 truncate text-sm", m.status === "new" ? "font-bold" : "font-medium")}>{m.name}</span>
-                      <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(m.created_at)}</span>
+                      {m.status === "new" && (
+                        <span
+                          className="size-2 shrink-0 rounded-full bg-primary"
+                          aria-label="Unread"
+                        />
+                      )}
+                      <span
+                        className={cn(
+                          "min-w-0 flex-1 truncate text-sm",
+                          m.status === "new" ? "font-bold" : "font-medium",
+                        )}
+                      >
+                        {m.name}
+                      </span>
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {timeAgo(m.created_at)}
+                      </span>
                     </div>
-                    <p className={cn("mt-0.5 truncate text-sm", m.status === "new" ? "font-semibold" : "text-foreground/80")}>{m.subject}</p>
+                    <p
+                      className={cn(
+                        "mt-0.5 truncate text-sm",
+                        m.status === "new" ? "font-semibold" : "text-foreground/80",
+                      )}
+                    >
+                      {m.subject}
+                    </p>
                     <p className="truncate text-xs text-muted-foreground">{m.message}</p>
                   </button>
                 </li>
               ))}
             </ul>
           )}
-          <Pagination page={page} pageSize={PAGE_SIZE} total={data?.total ?? 0} onPageChange={setPage} />
+          <Pagination
+            page={page}
+            pageSize={PAGE_SIZE}
+            total={data?.total ?? 0}
+            onPageChange={setPage}
+          />
         </div>
 
         <div className="p-6">
@@ -134,11 +173,15 @@ function MessagesPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <h2 className="text-xl font-bold">{selected.subject}</h2>
-                  <p className="mt-1 text-sm text-muted-foreground">{formatDateTime(selected.created_at)}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {formatDateTime(selected.created_at)}
+                  </p>
                 </div>
                 <div className="flex gap-1">
                   <Button asChild size="sm">
-                    <a href={`mailto:${selected.email}?subject=${encodeURIComponent(`Re: ${selected.subject}`)}`}>
+                    <a
+                      href={`mailto:${selected.email}?subject=${encodeURIComponent(`Re: ${selected.subject}`)}`}
+                    >
                       <Reply /> Reply
                     </a>
                   </Button>
@@ -168,7 +211,13 @@ function MessagesPage() {
                     </Button>
                   )}
                   {canDelete && (
-                    <Button variant="ghost" size="icon-sm" className="text-destructive" onClick={() => setDeleting(true)} aria-label="Delete">
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className="text-destructive"
+                      onClick={() => setDeleting(true)}
+                      aria-label="Delete"
+                    >
                       <Trash2 />
                     </Button>
                   )}
@@ -176,11 +225,17 @@ function MessagesPage() {
               </div>
               <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 rounded-lg bg-secondary/60 px-4 py-3 text-sm">
                 <span className="font-semibold">{selected.name}</span>
-                <a href={`mailto:${selected.email}`} className="flex items-center gap-1.5 text-primary hover:underline">
+                <a
+                  href={`mailto:${selected.email}`}
+                  className="flex items-center gap-1.5 text-primary hover:underline"
+                >
                   <Mail className="size-3.5" aria-hidden="true" /> {selected.email}
                 </a>
                 {selected.phone && (
-                  <a href={`tel:${selected.phone}`} className="flex items-center gap-1.5 text-primary hover:underline">
+                  <a
+                    href={`tel:${selected.phone}`}
+                    className="flex items-center gap-1.5 text-primary hover:underline"
+                  >
                     <Phone className="size-3.5" aria-hidden="true" /> {selected.phone}
                   </a>
                 )}
@@ -188,7 +243,9 @@ function MessagesPage() {
               <p className="mt-6 leading-relaxed whitespace-pre-line">{selected.message}</p>
             </article>
           ) : (
-            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Select a message to read it.</div>
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              Select a message to read it.
+            </div>
           )}
         </div>
       </div>

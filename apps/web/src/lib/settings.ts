@@ -10,7 +10,10 @@ const link = z
   .string()
   .trim()
   .max(500)
-  .refine((v) => v === "" || /^(\/|#|https?:\/\/|mailto:|tel:)/i.test(v), "Use a path like /about or a full URL");
+  .refine(
+    (v) => v === "" || /^(\/|#|https?:\/\/|mailto:|tel:)/i.test(v),
+    "Use a path like /about or a full URL",
+  );
 const text = (max: number) => z.string().trim().max(max);
 
 export const QUICK_LINK_ICONS = [
@@ -25,7 +28,14 @@ export const QUICK_LINK_ICONS = [
   "contact",
 ] as const;
 
-export const SOCIAL_PLATFORMS = ["facebook", "x", "instagram", "youtube", "linkedin", "tiktok"] as const;
+export const SOCIAL_PLATFORMS = [
+  "facebook",
+  "x",
+  "instagram",
+  "youtube",
+  "linkedin",
+  "tiktok",
+] as const;
 
 export const settingsSchemas = {
   identity: z.object({
@@ -178,8 +188,18 @@ export const DEFAULT_SETTINGS: SiteSettings = {
       { label: "Apply Now", url: "/admissions", icon: "apply", highlight: true },
       { label: "Student Portal", url: "#", icon: "portal", highlight: false },
       { label: "E-Learning", url: "#", icon: "elearning", highlight: false },
-      { label: "Library", url: "/student-life/student-services", icon: "library", highlight: false },
-      { label: "Academic Calendar", url: "/downloads?category=timetable", icon: "calendar", highlight: false },
+      {
+        label: "Library",
+        url: "/student-life/student-services",
+        icon: "library",
+        highlight: false,
+      },
+      {
+        label: "Academic Calendar",
+        url: "/downloads?category=timetable",
+        icon: "calendar",
+        highlight: false,
+      },
       { label: "Downloads", url: "/downloads", icon: "download", highlight: false },
     ],
   },
@@ -208,10 +228,13 @@ export const DEFAULT_SETTINGS: SiteSettings = {
 
 // Merges a stored (possibly partial or stale) value over the defaults; any
 // stored value that no longer validates falls back to the default.
-export function mergeSetting<TKey extends SettingsKey>(key: TKey, stored: unknown): SiteSettings[TKey] {
+export function mergeSetting<TKey extends SettingsKey>(
+  key: TKey,
+  stored: unknown,
+): SiteSettings[TKey] {
   const defaults = DEFAULT_SETTINGS[key];
   if (!stored || typeof stored !== "object") return defaults;
-  const merged = { ...defaults, ...(stored) };
+  const merged = { ...defaults, ...stored };
   const parsed = settingsSchemas[key].safeParse(merged);
   return parsed.success ? (parsed.data as SiteSettings[TKey]) : defaults;
 }

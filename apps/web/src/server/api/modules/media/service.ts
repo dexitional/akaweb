@@ -34,18 +34,31 @@ const TYPES: Record<string, { ext: string; maxBytes: number }> = {
   "image/avif": { ext: "avif", maxBytes: 12 * MB },
   "application/pdf": { ext: "pdf", maxBytes: 40 * MB },
   "application/msword": { ext: "doc", maxBytes: 25 * MB },
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": { ext: "docx", maxBytes: 25 * MB },
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
+    ext: "docx",
+    maxBytes: 25 * MB,
+  },
   "application/vnd.ms-excel": { ext: "xls", maxBytes: 25 * MB },
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": { ext: "xlsx", maxBytes: 25 * MB },
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+    ext: "xlsx",
+    maxBytes: 25 * MB,
+  },
   "application/vnd.ms-powerpoint": { ext: "ppt", maxBytes: 40 * MB },
-  "application/vnd.openxmlformats-officedocument.presentationml.presentation": { ext: "pptx", maxBytes: 40 * MB },
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": {
+    ext: "pptx",
+    maxBytes: 40 * MB,
+  },
 };
 
 const KEY_PATTERN = /^cms\/[a-z]+\/\d{4}\/\d{2}\/[0-9a-f]{8}-[a-z0-9-]+\.[a-z0-9]+$/;
 
 export async function presign(input: z.infer<typeof presignSchema>) {
   const type = TYPES[input.contentType];
-  if (!type) throw new AppError("That file type isn't supported. Upload images, PDFs or Office documents.", 400);
+  if (!type)
+    throw new AppError(
+      "That file type isn't supported. Upload images, PDFs or Office documents.",
+      400,
+    );
   if (input.size > type.maxBytes) {
     throw new AppError(`That file is too large — the limit is ${type.maxBytes / MB} MB.`, 400);
   }
@@ -57,7 +70,8 @@ export async function presign(input: z.infer<typeof presignSchema>) {
 }
 
 export async function registerAsset(adminId: number, input: z.infer<typeof registerSchema>) {
-  if (!KEY_PATTERN.test(input.key) || !TYPES[input.contentType]) throw new AppError("Invalid upload.", 400);
+  if (!KEY_PATTERN.test(input.key) || !TYPES[input.contentType])
+    throw new AppError("Invalid upload.", 400);
   const id = await insertRow(
     "media_assets",
     {
@@ -124,7 +138,11 @@ export async function listMedia(q: {
 
 export async function updateAsset(id: number, input: z.infer<typeof updateMediaSchema>) {
   await findById("media_assets", id, "File");
-  await updateRow("media_assets", id, input, { altText: "alt_text", filename: "filename", folder: "folder" });
+  await updateRow("media_assets", id, input, {
+    altText: "alt_text",
+    filename: "filename",
+    folder: "folder",
+  });
   return findById<MediaAssetRow>("media_assets", id, "File");
 }
 
@@ -165,7 +183,9 @@ export async function findUsage(id: number) {
     checks.map(([kind, sql, params]) =>
       pool
         .query<RowDataPacket[]>(sql, params)
-        .then(([rows]) => rows.map((r) => ({ kind, id: r.id as number | string, label: r.label as string }))),
+        .then(([rows]) =>
+          rows.map((r) => ({ kind, id: r.id as number | string, label: r.label as string })),
+        ),
     ),
   );
   return results.flat();

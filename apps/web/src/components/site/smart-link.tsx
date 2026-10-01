@@ -21,7 +21,14 @@ export function SmartLink({
     const [path = "/", query] = beforeHash.split("?");
     const search = query ? Object.fromEntries(new URLSearchParams(query)) : undefined;
     return (
-      <Link to={path} search={search as never} hash={hash} className={className} onClick={onClick} {...rest}>
+      <Link
+        to={path}
+        search={search as never}
+        hash={hash}
+        className={className}
+        onClick={onClick}
+        {...rest}
+      >
         {children}
       </Link>
     );

@@ -17,7 +17,10 @@ export const linkSchema = z
   .string()
   .trim()
   .max(700)
-  .refine((v) => /^(\/|#|https?:\/\/|mailto:|tel:)/i.test(v), "Use a path like /about or a full URL");
+  .refine(
+    (v) => /^(\/|#|https?:\/\/|mailto:|tel:)/i.test(v),
+    "Use a path like /about or a full URL",
+  );
 export const optionalLink = optionalField(linkSchema);
 
 export const urlSchema = z.string().trim().url().max(700);
@@ -46,4 +49,6 @@ export const slugSchema = z
   .max(150)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers and hyphens");
 
-export const reorderSchema = z.object({ ids: z.array(z.number().int().positive()).min(1).max(500) });
+export const reorderSchema = z.object({
+  ids: z.array(z.number().int().positive()).min(1).max(500),
+});

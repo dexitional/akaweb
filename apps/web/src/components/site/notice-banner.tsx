@@ -31,7 +31,11 @@ export function NoticeBanner() {
   };
 
   return (
-    <div className="relative border-b border-amber-200/70 bg-amber-50" role="region" aria-label="Notice">
+    <div
+      className="relative border-b border-amber-200/70 bg-amber-50"
+      role="region"
+      aria-label="Notice"
+    >
       <div className="mx-auto flex max-w-7xl flex-col gap-3 py-3 pr-14 pl-4 md:flex-row md:items-center md:justify-between md:px-8 md:pr-16">
         <div className="flex min-w-0 items-start gap-3">
           <Info className="mt-0.5 size-5 shrink-0 text-amber-700" aria-hidden="true" />

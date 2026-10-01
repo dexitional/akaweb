@@ -1,7 +1,15 @@
 import type { MediaAssetRow } from "@aka/db";
 import { api } from "./api-client";
 
-export type MediaFolder = "general" | "pages" | "posts" | "spotlights" | "people" | "departments" | "documents" | "settings";
+export type MediaFolder =
+  | "general"
+  | "pages"
+  | "posts"
+  | "spotlights"
+  | "people"
+  | "departments"
+  | "documents"
+  | "settings";
 
 export const MEDIA_FOLDERS: Array<{ key: MediaFolder; label: string }> = [
   { key: "general", label: "General" },
@@ -20,7 +28,8 @@ export const DOCUMENT_ACCEPT =
 
 export type MediaAsset = MediaAssetRow & { uploaded_by_name?: string | null };
 
-export const isImage = (asset: Pick<MediaAssetRow, "mime_type">) => asset.mime_type.startsWith("image/");
+export const isImage = (asset: Pick<MediaAssetRow, "mime_type">) =>
+  asset.mime_type.startsWith("image/");
 
 function imageSize(file: File): Promise<{ width: number; height: number } | null> {
   if (!file.type.startsWith("image/")) return Promise.resolve(null);
@@ -58,8 +67,12 @@ export async function uploadToLibrary(
     xhr.open("PUT", uploadUrl);
     xhr.setRequestHeader("Content-Type", file.type);
     xhr.upload.onprogress = (e) => e.lengthComputable && onProgress?.(e.loaded / e.total);
-    xhr.onload = () => (xhr.status >= 200 && xhr.status < 300 ? resolve() : reject(new Error("Upload to storage failed.")));
-    xhr.onerror = () => reject(new Error("Couldn't reach file storage. Check the bucket's CORS settings."));
+    xhr.onload = () =>
+      xhr.status >= 200 && xhr.status < 300
+        ? resolve()
+        : reject(new Error("Upload to storage failed."));
+    xhr.onerror = () =>
+      reject(new Error("Couldn't reach file storage. Check the bucket's CORS settings."));
     xhr.send(file);
   });
 

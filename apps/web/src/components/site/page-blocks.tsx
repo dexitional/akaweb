@@ -1,8 +1,21 @@
 import { useState } from "react";
-import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight, Clock, Info, Mail, MapPin, Phone, Quote, TriangleAlert, CircleCheck, X } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  Info,
+  Mail,
+  MapPin,
+  Phone,
+  Quote,
+  TriangleAlert,
+  CircleCheck,
+  X,
+} from "lucide-react";
 import type { Block, BlockOf } from "#/lib/blocks";
 import { videoEmbedUrl } from "#/lib/blocks";
-import { imageSrc } from "#/lib/asset";
 import { cn } from "#/lib/utils";
 import { useSiteLayout } from "#/lib/site-layout";
 import { DEPARTMENT_KINDS } from "#/lib/content";
@@ -14,10 +27,17 @@ import { CoverImage } from "./cover-image";
 import { PeopleGrid } from "./person-card";
 import { DocumentList } from "./document-list";
 import { ContactForm } from "./contact-form";
+import { OptimizedImage } from "#/components/site/optimized-image";
 
 // Draws a CMS page's blocks in order. Directory blocks (people, departments,
 // downloads) read their rows from `resolved`, fetched server-side.
-export function PageBlocks({ blocks, resolved }: { blocks: Array<Block>; resolved: ResolvedBlockData }) {
+export function PageBlocks({
+  blocks,
+  resolved,
+}: {
+  blocks: Array<Block>;
+  resolved: ResolvedBlockData;
+}) {
   return (
     <div className="space-y-14">
       {blocks.map((block) => (
@@ -80,7 +100,9 @@ function BlockTitle({ title, intro }: { title?: string; intro?: string }) {
   if (!title && !intro) return null;
   return (
     <div className="mb-6">
-      {title && <h2 className="text-2xl font-extrabold tracking-tight text-primary md:text-3xl">{title}</h2>}
+      {title && (
+        <h2 className="text-2xl font-extrabold tracking-tight text-primary md:text-3xl">{title}</h2>
+      )}
       {intro && <p className="mt-2 max-w-3xl leading-relaxed text-muted-foreground">{intro}</p>}
     </div>
   );
@@ -91,17 +113,37 @@ function ImageText({ block }: { block: BlockOf<"imageText"> }) {
     <section
       className={cn(
         "grid items-start gap-8",
-        block.imageUrl && (block.imagePosition === "left" ? "md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]" : "md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"),
+        block.imageUrl &&
+          (block.imagePosition === "left"
+            ? "md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]"
+            : "md:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]"),
       )}
     >
       {block.imageUrl && (
-        <div className={cn("relative isolate md:sticky md:top-28", block.imagePosition === "left" ? "md:order-first" : "md:order-last")}>
-          <div className="absolute -inset-3 -z-10 rounded-3xl bg-gradient-to-br from-brand-sky/40 to-brand-green/20" aria-hidden="true" />
-          <img src={imageSrc(block.imageUrl)} alt={block.imageAlt} loading="lazy" className="max-h-[560px] w-full rounded-2xl object-cover object-top shadow-lg" />
+        <div
+          className={cn(
+            "relative isolate md:sticky md:top-28",
+            block.imagePosition === "left" ? "md:order-first" : "md:order-last",
+          )}
+        >
+          <div
+            className="absolute -inset-3 -z-10 rounded-3xl bg-gradient-to-br from-brand-sky/40 to-brand-green/20"
+            aria-hidden="true"
+          />
+          <OptimizedImage
+            src={block.imageUrl}
+            alt={block.imageAlt}
+            sizes="(min-width: 768px) 50vw, 100vw"
+            className="max-h-[560px] w-full rounded-2xl object-cover object-top shadow-lg"
+          />
         </div>
       )}
       <div>
-        {block.title && <h2 className="mb-4 text-2xl font-extrabold tracking-tight text-primary md:text-3xl">{block.title}</h2>}
+        {block.title && (
+          <h2 className="mb-4 text-2xl font-extrabold tracking-tight text-primary md:text-3xl">
+            {block.title}
+          </h2>
+        )}
         {block.html && <RichContent html={block.html} />}
       </div>
     </section>
@@ -109,7 +151,11 @@ function ImageText({ block }: { block: BlockOf<"imageText"> }) {
 }
 
 function Cards({ block }: { block: BlockOf<"cards"> }) {
-  const cols = { 2: "sm:grid-cols-2", 3: "sm:grid-cols-2 lg:grid-cols-3", 4: "sm:grid-cols-2 lg:grid-cols-4" }[block.columns];
+  const cols = {
+    2: "sm:grid-cols-2",
+    3: "sm:grid-cols-2 lg:grid-cols-3",
+    4: "sm:grid-cols-2 lg:grid-cols-4",
+  }[block.columns];
   return (
     <section>
       <BlockTitle title={block.title} intro={block.intro} />
@@ -118,16 +164,30 @@ function Cards({ block }: { block: BlockOf<"cards"> }) {
           const inner = (
             <>
               {item.imageUrl && (
-                <CoverImage src={item.imageUrl} className="aspect-[16/10]" imgClassName="transition-transform duration-500 group-hover:scale-105" />
+                <CoverImage
+                  src={item.imageUrl}
+                  className="aspect-[16/10]"
+                  imgClassName="transition-transform duration-500 group-hover:scale-105"
+                />
               )}
               <div className="flex flex-1 flex-col p-5">
-                {!item.imageUrl && <span className="mb-3 block h-1 w-10 rounded-full bg-brand-green" aria-hidden="true" />}
+                {!item.imageUrl && (
+                  <span
+                    className="mb-3 block h-1 w-10 rounded-full bg-brand-green"
+                    aria-hidden="true"
+                  />
+                )}
                 <h3 className="font-bold text-slate-900 group-hover:text-primary">{item.title}</h3>
-                {item.text && <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.text}</p>}
+                {item.text && (
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.text}</p>
+                )}
                 {item.url && (
                   <span className="mt-auto flex items-center gap-1 pt-4 text-sm font-semibold text-primary">
                     Learn more
-                    <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                    <ArrowRight
+                      className="size-3.5 transition-transform group-hover:translate-x-1"
+                      aria-hidden="true"
+                    />
                   </span>
                 )}
               </div>
@@ -182,7 +242,11 @@ function Steps({ block }: { block: BlockOf<"steps"> }) {
               {i + 1}
             </span>
             <h3 className="font-bold text-slate-900">{item.title}</h3>
-            {item.text && <p className="mt-1 leading-relaxed whitespace-pre-line text-muted-foreground">{item.text}</p>}
+            {item.text && (
+              <p className="mt-1 leading-relaxed whitespace-pre-line text-muted-foreground">
+                {item.text}
+              </p>
+            )}
           </li>
         ))}
       </ol>
@@ -199,9 +263,14 @@ function Faq({ block }: { block: BlockOf<"faq"> }) {
           <details key={`${item.question}-${i}`} className="group">
             <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-semibold text-slate-900 hover:bg-secondary/60 [&::-webkit-details-marker]:hidden">
               {item.question}
-              <ChevronDown className="size-4 shrink-0 text-primary transition-transform group-open:rotate-180" aria-hidden="true" />
+              <ChevronDown
+                className="size-4 shrink-0 text-primary transition-transform group-open:rotate-180"
+                aria-hidden="true"
+              />
             </summary>
-            <p className="px-5 pb-5 leading-relaxed whitespace-pre-line text-muted-foreground">{item.answer}</p>
+            <p className="px-5 pb-5 leading-relaxed whitespace-pre-line text-muted-foreground">
+              {item.answer}
+            </p>
           </details>
         ))}
       </div>
@@ -211,8 +280,16 @@ function Faq({ block }: { block: BlockOf<"faq"> }) {
 
 const CALLOUT_TONES = {
   info: { icon: Info, box: "border-blue-200 bg-blue-50", iconClass: "text-blue-700" },
-  success: { icon: CircleCheck, box: "border-emerald-200 bg-emerald-50", iconClass: "text-brand-green" },
-  warning: { icon: TriangleAlert, box: "border-amber-200 bg-amber-50", iconClass: "text-amber-700" },
+  success: {
+    icon: CircleCheck,
+    box: "border-emerald-200 bg-emerald-50",
+    iconClass: "text-brand-green",
+  },
+  warning: {
+    icon: TriangleAlert,
+    box: "border-amber-200 bg-amber-50",
+    iconClass: "text-amber-700",
+  },
 } as const;
 
 function Callout({ block }: { block: BlockOf<"callout"> }) {
@@ -222,7 +299,9 @@ function Callout({ block }: { block: BlockOf<"callout"> }) {
       <tone.icon className={cn("mt-0.5 size-5 shrink-0", tone.iconClass)} aria-hidden="true" />
       <div>
         {block.title && <p className="font-bold text-slate-900">{block.title}</p>}
-        {block.text && <p className="mt-1 leading-relaxed whitespace-pre-line text-slate-700">{block.text}</p>}
+        {block.text && (
+          <p className="mt-1 leading-relaxed whitespace-pre-line text-slate-700">{block.text}</p>
+        )}
       </div>
     </aside>
   );
@@ -234,14 +313,23 @@ function QuoteBlock({ block }: { block: BlockOf<"quote"> }) {
       <Quote className="absolute top-6 right-6 size-16 text-primary/10" aria-hidden="true" />
       <div className="flex flex-col gap-6 md:flex-row md:items-center">
         {block.imageUrl && (
-          <img src={imageSrc(block.imageUrl)} alt={block.author} className="size-28 shrink-0 rounded-2xl object-cover shadow-md md:size-36" />
+          <OptimizedImage
+            src={block.imageUrl}
+            alt={block.author}
+            sizes="(min-width: 768px) 144px, 112px"
+            className="size-28 shrink-0 rounded-2xl object-cover shadow-md md:size-36"
+          />
         )}
         <div>
-          <blockquote className="font-serif text-xl leading-relaxed text-slate-800 md:text-2xl">“{block.quote}”</blockquote>
+          <blockquote className="font-serif text-xl leading-relaxed text-slate-800 md:text-2xl">
+            “{block.quote}”
+          </blockquote>
           {(block.author || block.role) && (
             <figcaption className="mt-4">
               <span className="font-bold text-primary">{block.author}</span>
-              {block.role && <span className="block text-sm text-muted-foreground">{block.role}</span>}
+              {block.role && (
+                <span className="block text-sm text-muted-foreground">{block.role}</span>
+              )}
             </figcaption>
           )}
         </div>
@@ -258,19 +346,35 @@ const CTA_TONES = {
 
 function Cta({ block }: { block: BlockOf<"cta"> }) {
   return (
-    <section className={cn("relative overflow-hidden rounded-3xl px-6 py-10 md:px-12", CTA_TONES[block.tone])}>
+    <section
+      className={cn(
+        "relative overflow-hidden rounded-3xl px-6 py-10 md:px-12",
+        CTA_TONES[block.tone],
+      )}
+    >
       {block.tone !== "sky" && <div className="line-grid absolute inset-0" aria-hidden="true" />}
       <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="max-w-2xl">
           <h2 className="text-2xl font-extrabold md:text-3xl">{block.title}</h2>
-          {block.text && <p className={cn("mt-2 leading-relaxed", block.tone === "sky" ? "text-slate-700" : "text-white/80")}>{block.text}</p>}
+          {block.text && (
+            <p
+              className={cn(
+                "mt-2 leading-relaxed",
+                block.tone === "sky" ? "text-slate-700" : "text-white/80",
+              )}
+            >
+              {block.text}
+            </p>
+          )}
         </div>
         {block.buttonLabel && block.buttonUrl && (
           <SmartLink
             href={block.buttonUrl}
             className={cn(
               "inline-flex w-fit shrink-0 items-center gap-2 rounded-full px-7 py-3.5 font-bold transition",
-              block.tone === "sky" ? "bg-primary text-white hover:bg-primary-dark" : "bg-white text-primary hover:bg-brand-sky",
+              block.tone === "sky"
+                ? "bg-primary text-white hover:bg-primary-dark"
+                : "bg-white text-primary hover:bg-brand-sky",
             )}
           >
             {block.buttonLabel}
@@ -298,10 +402,10 @@ function Gallery({ block }: { block: BlockOf<"gallery"> }) {
               className="group relative block size-full overflow-hidden rounded-xl"
               aria-label={img.caption || `Open photo ${i + 1}`}
             >
-              <img
-                src={imageSrc(img.url)}
+              <OptimizedImage
+                src={img.url}
                 alt={img.caption}
-                loading="lazy"
+                sizes="(min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
                 className="aspect-square size-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
               {img.caption && (
@@ -325,22 +429,49 @@ function Gallery({ block }: { block: BlockOf<"gallery"> }) {
             if (e.key === "ArrowLeft") setIndex((index - 1 + count) % count);
           }}
         >
-          <button type="button" autoFocus onClick={() => setIndex(null)} className="absolute top-4 right-4 rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20" aria-label="Close">
+          <button
+            type="button"
+            autoFocus
+            onClick={() => setIndex(null)}
+            className="absolute top-4 right-4 rounded-full bg-white/10 p-2.5 text-white hover:bg-white/20"
+            aria-label="Close"
+          >
             <X className="size-6" />
           </button>
           {count > 1 && (
             <>
-              <button type="button" onClick={() => setIndex((index - 1 + count) % count)} className="absolute left-4 rounded-full bg-white/10 p-3 text-white hover:bg-white/20" aria-label="Previous photo">
+              <button
+                type="button"
+                onClick={() => setIndex((index - 1 + count) % count)}
+                className="absolute left-4 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+                aria-label="Previous photo"
+              >
                 <ChevronLeft className="size-6" />
               </button>
-              <button type="button" onClick={() => setIndex((index + 1) % count)} className="absolute right-4 rounded-full bg-white/10 p-3 text-white hover:bg-white/20" aria-label="Next photo">
+              <button
+                type="button"
+                onClick={() => setIndex((index + 1) % count)}
+                className="absolute right-4 rounded-full bg-white/10 p-3 text-white hover:bg-white/20"
+                aria-label="Next photo"
+              >
                 <ChevronRight className="size-6" />
               </button>
             </>
           )}
           <figure className="max-h-full max-w-5xl">
-            <img src={imageSrc(current.url)} alt={current.caption} className="max-h-[80vh] w-auto rounded-lg object-contain" />
-            {current.caption && <figcaption className="mt-3 text-center text-sm text-white/80">{current.caption}</figcaption>}
+            <OptimizedImage
+              src={current.url}
+              alt={current.caption}
+              sizes="100vw"
+              loading="eager"
+              quality={85}
+              className="max-h-[80vh] w-auto rounded-lg object-contain"
+            />
+            {current.caption && (
+              <figcaption className="mt-3 text-center text-sm text-white/80">
+                {current.caption}
+              </figcaption>
+            )}
           </figure>
         </div>
       )}
@@ -369,7 +500,13 @@ function Video({ block }: { block: BlockOf<"video"> }) {
   );
 }
 
-function Departments({ block, items }: { block: BlockOf<"departments">; items: ResolvedBlockData["departments"][string] }) {
+function Departments({
+  block,
+  items,
+}: {
+  block: BlockOf<"departments">;
+  items: ResolvedBlockData["departments"][string];
+}) {
   if (items.length === 0) return null;
   const base = DEPARTMENT_KINDS[block.kind].path;
   return (
@@ -382,10 +519,16 @@ function Departments({ block, items }: { block: BlockOf<"departments">; items: R
               href={`${base}/${d.slug}`}
               className="group flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-white shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-primary/10"
             >
-              <CoverImage src={d.image_url} className="aspect-[16/9]" imgClassName="transition-transform duration-500 group-hover:scale-105" />
+              <CoverImage
+                src={d.image_url}
+                className="aspect-[16/9]"
+                imgClassName="transition-transform duration-500 group-hover:scale-105"
+              />
               <div className="flex flex-1 flex-col p-5">
                 <h3 className="font-bold text-slate-900 group-hover:text-primary">{d.name}</h3>
-                {d.summary && <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{d.summary}</p>}
+                {d.summary && (
+                  <p className="mt-2 line-clamp-3 text-sm text-muted-foreground">{d.summary}</p>
+                )}
                 {d.head_name && (
                   <p className="mt-auto pt-4 text-xs text-muted-foreground">
                     <span className="font-semibold text-slate-700">{d.head_name}</span>
@@ -406,29 +549,51 @@ function ContactBlock({ block }: { block: BlockOf<"contact"> }) {
   const { contact } = settings;
   const rows = [
     { icon: MapPin, label: "Address", value: contact.address },
-    { icon: Phone, label: "Phone", value: [contact.phone, contact.altPhone].filter(Boolean).join("\n"), href: contact.phone ? `tel:${contact.phone.replace(/[^\d+]/g, "")}` : undefined },
-    { icon: Mail, label: "Email", value: contact.email, href: contact.email ? `mailto:${contact.email}` : undefined },
+    {
+      icon: Phone,
+      label: "Phone",
+      value: [contact.phone, contact.altPhone].filter(Boolean).join("\n"),
+      href: contact.phone ? `tel:${contact.phone.replace(/[^\d+]/g, "")}` : undefined,
+    },
+    {
+      icon: Mail,
+      label: "Email",
+      value: contact.email,
+      href: contact.email ? `mailto:${contact.email}` : undefined,
+    },
     { icon: Clock, label: "Office hours", value: contact.officeHours },
   ].filter((r) => r.value);
 
   return (
     <section>
       <BlockTitle title={block.title} intro={block.intro} />
-      <div className={cn("grid gap-8", block.showForm && "lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]")}>
+      <div
+        className={cn("grid gap-8", block.showForm && "lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]")}
+      >
         <div className="space-y-4">
           {rows.map((row) => (
-            <div key={row.label} className="flex gap-4 rounded-2xl border border-border bg-white p-5">
+            <div
+              key={row.label}
+              className="flex gap-4 rounded-2xl border border-border bg-white p-5"
+            >
               <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
                 <row.icon className="size-5" aria-hidden="true" />
               </span>
               <div>
-                <p className="text-xs font-bold tracking-wider text-muted-foreground uppercase">{row.label}</p>
+                <p className="text-xs font-bold tracking-wider text-muted-foreground uppercase">
+                  {row.label}
+                </p>
                 {row.href ? (
-                  <a href={row.href} className="mt-1 block font-semibold whitespace-pre-line text-slate-900 hover:text-primary">
+                  <a
+                    href={row.href}
+                    className="mt-1 block font-semibold whitespace-pre-line text-slate-900 hover:text-primary"
+                  >
                     {row.value}
                   </a>
                 ) : (
-                  <p className="mt-1 font-semibold whitespace-pre-line text-slate-900">{row.value}</p>
+                  <p className="mt-1 font-semibold whitespace-pre-line text-slate-900">
+                    {row.value}
+                  </p>
                 )}
               </div>
             </div>

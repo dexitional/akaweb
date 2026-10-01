@@ -8,6 +8,7 @@
 @source "../../../packages/ui/src";
 @import "@aka/ui/tokens.css";
 @import "tw-animate-css";
+@import "./directory.css";
 
 html,
 body {

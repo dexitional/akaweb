@@ -76,13 +76,25 @@ export const documentsRoute = new Hono()
     const id = idParam(c.req.param("id"));
     const current = await get(id);
     await updateRow("documents", id, c.req.valid("json"), FIELDS);
-    logActivity(c.get("admin").id, "updated", "document", id, `Updated document “${c.req.valid("json").title ?? current.title}”`);
+    logActivity(
+      c.get("admin").id,
+      "updated",
+      "document",
+      id,
+      `Updated document “${c.req.valid("json").title ?? current.title}”`,
+    );
     return c.json({ document: await get(id) });
   })
   .delete("/:id", async (c) => {
     const id = idParam(c.req.param("id"));
     const current = await get(id);
     await deleteRow("documents", id, "Document");
-    logActivity(c.get("admin").id, "deleted", "document", id, `Deleted document “${current.title}”`);
+    logActivity(
+      c.get("admin").id,
+      "deleted",
+      "document",
+      id,
+      `Deleted document “${current.title}”`,
+    );
     return c.body(null, 204);
   });

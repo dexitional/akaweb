@@ -41,11 +41,15 @@ const listQuerySchema = pageQuerySchema.extend({
 export const mediaRoute = new Hono()
   .use("*", requirePermission("media", "manage"))
   .get("/", async (c) => c.json(await service.listMedia(listQuerySchema.parse(c.req.query()))))
-  .post("/presign", validate("json", presignSchema), async (c) => c.json(await service.presign(c.req.valid("json"))))
+  .post("/presign", validate("json", presignSchema), async (c) =>
+    c.json(await service.presign(c.req.valid("json"))),
+  )
   .post("/", validate("json", registerSchema), async (c) =>
     c.json({ asset: await service.registerAsset(c.get("admin").id, c.req.valid("json")) }, 201),
   )
-  .get("/:id/usage", async (c) => c.json({ usage: await service.findUsage(idParam(c.req.param("id"))) }))
+  .get("/:id/usage", async (c) =>
+    c.json({ usage: await service.findUsage(idParam(c.req.param("id"))) }),
+  )
   .patch("/:id", validate("json", updateMediaSchema), async (c) =>
     c.json({ asset: await service.updateAsset(idParam(c.req.param("id")), c.req.valid("json")) }),
   )

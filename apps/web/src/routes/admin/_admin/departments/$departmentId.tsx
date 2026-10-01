@@ -7,8 +7,17 @@ import { ArrowLeft, ExternalLink, Loader2 } from "lucide-react";
 import type { DepartmentKind, DepartmentRow } from "@aka/db";
 import { api } from "#/lib/api-client";
 import { DEPARTMENT_KINDS } from "#/lib/content";
+import { UNIT_CATEGORIES } from "#/lib/directory";
+import type { UnitCategoryValue } from "#/lib/directory";
 import { canManage } from "#/lib/permissions";
-import { AdminPageHeader, Field, Panel, Segmented, Switch, errorToast } from "#/components/admin/ui";
+import {
+  AdminPageHeader,
+  Field,
+  Panel,
+  Segmented,
+  Switch,
+  errorToast,
+} from "#/components/admin/ui";
 import { RichTextEditor } from "#/components/admin/rich-text-editor";
 import { ImageField } from "#/components/admin/media-fields";
 import { ItemList } from "#/components/admin/block-editor";
@@ -21,7 +30,7 @@ export const Route = createFileRoute("/admin/_admin/departments/$departmentId")(
   component: DepartmentEditorRoute,
 });
 
-type Full = DepartmentRow & { programmes: Array<string> };
+type Full = DepartmentRow & { programmes: Array<string>; related_ids: Array<number> };
 
 function toForm(d: Full) {
   return {
@@ -39,6 +48,11 @@ function toForm(d: Full) {
     location: d.location ?? "",
     programmes: d.programmes,
     isPublished: d.is_published === 1,
+    directoryCategory: (d.directory_category ?? d.kind) as UnitCategoryValue,
+    code: d.code ?? "",
+    websiteUrl: d.website_url ?? "",
+    isFeaturedDirectory: d.is_featured_directory === 1,
+    relatedIds: d.related_ids,
   };
 }
 type Form = ReturnType<typeof toForm>;
@@ -49,7 +63,8 @@ function DepartmentEditorRoute() {
   const isNew = departmentId === "new";
   const { data, isLoading } = useQuery({
     queryKey: ["departments", departmentId],
-    queryFn: () => api.get<{ department: Full }>(`/departments/${departmentId}`).then((r) => r.department),
+    queryFn: () =>
+      api.get<{ department: Full }>(`/departments/${departmentId}`).then((r) => r.department),
     enabled: !isNew,
   });
   if (!isNew && (isLoading || !data)) return <p className="text-muted-foreground">Loading…</p>;
@@ -70,6 +85,11 @@ function DepartmentEditorRoute() {
         location: "",
         programmes: [],
         isPublished: true,
+        directoryCategory: kind ?? "department",
+        code: "",
+        websiteUrl: "",
+        isFeaturedDirectory: false,
+        relatedIds: [],
       };
   return <DepartmentEditor key={departmentId} department={data ?? null} initial={initial} />;
 }
@@ -82,17 +102,36 @@ function DepartmentEditor({ department, initial }: { department: Full | null; in
   const [form, setForm] = useState<Form>(initial);
   const set = (patch: Partial<Form>) => setForm((f) => ({ ...f, ...patch }));
   const meta = DEPARTMENT_KINDS[form.kind];
+  const { data: allUnits } = useQuery({
+    queryKey: ["departments"],
+    queryFn: () =>
+      api
+        .get<{ departments: Array<{ id: number; name: string }> }>("/departments")
+        .then((r) => r.departments),
+  });
+  const otherUnits = (allUnits ?? []).filter((u) => u.id !== department?.id);
 
   const save = useMutation({
     mutationFn: () => {
-      const body = { ...form, slug: form.slug.replace(/^-+|-+$/g, ""), programmes: form.programmes.map((p) => p.trim()).filter(Boolean) };
-      return department ? api.patch<{ department: Full }>(`/departments/${department.id}`, body) : api.post<{ department: Full }>("/departments", body);
+      const body = {
+        ...form,
+        slug: form.slug.replace(/^-+|-+$/g, ""),
+        programmes: form.programmes.map((p) => p.trim()).filter(Boolean),
+      };
+      return department
+        ? api.patch<{ department: Full }>(`/departments/${department.id}`, body)
+        : api.post<{ department: Full }>("/departments", body);
     },
     onSuccess: ({ department: saved }) => {
       setForm(toForm(saved));
       void queryClient.invalidateQueries({ queryKey: ["departments"] });
       toast.success("Saved.");
-      if (!department) void navigate({ to: "/admin/departments/$departmentId", params: { departmentId: String(saved.id) }, replace: true });
+      if (!department)
+        void navigate({
+          to: "/admin/departments/$departmentId",
+          params: { departmentId: String(saved.id) },
+          replace: true,
+        });
     },
     onError: errorToast("Couldn't save."),
   });
@@ -101,7 +140,10 @@ function DepartmentEditor({ department, initial }: { department: Full | null; in
     <div className="flex flex-col gap-6">
       <AdminPageHeader
         eyebrow={
-          <Link to="/admin/departments" className="inline-flex items-center gap-1 hover:text-primary">
+          <Link
+            to="/admin/departments"
+            className="inline-flex items-center gap-1 hover:text-primary"
+          >
             <ArrowLeft className="size-3.5" /> Departments & Units
           </Link>
         }
@@ -110,13 +152,27 @@ function DepartmentEditor({ department, initial }: { department: Full | null; in
           <>
             {department && (
               <Button asChild variant="outline">
-                <a href={`${DEPARTMENT_KINDS[department.kind].path}/${department.slug}`} target="_blank" rel="noopener">
+                <a href={`/directory/d/${department.slug}`} target="_blank" rel="noopener">
+                  <ExternalLink /> Directory
+                </a>
+              </Button>
+            )}
+            {department && (
+              <Button asChild variant="outline">
+                <a
+                  href={`${DEPARTMENT_KINDS[department.kind].path}/${department.slug}`}
+                  target="_blank"
+                  rel="noopener"
+                >
                   <ExternalLink /> View
                 </a>
               </Button>
             )}
             {canEdit && (
-              <Button disabled={form.name.trim().length < 2 || save.isPending} onClick={() => save.mutate()}>
+              <Button
+                disabled={form.name.trim().length < 2 || save.isPending}
+                onClick={() => save.mutate()}
+              >
                 {save.isPending && <Loader2 className="animate-spin" />} Save
               </Button>
             )}
@@ -138,25 +194,49 @@ function DepartmentEditor({ department, initial }: { department: Full | null; in
                 />
               </Field>
               <Field label="Name">
-                <Input value={form.name} onChange={(e) => set({ name: e.target.value })} className="h-11 text-lg font-semibold" placeholder="e.g. Mathematics and ICT Department" />
+                <Input
+                  value={form.name}
+                  onChange={(e) => set({ name: e.target.value })}
+                  className="h-11 text-lg font-semibold"
+                  placeholder="e.g. Mathematics and ICT Department"
+                />
               </Field>
-              <Field label="Web address" hint={form.slug ? undefined : "Created from the name when you save."}>
+              <Field
+                label="Web address"
+                hint={form.slug ? undefined : "Created from the name when you save."}
+              >
                 <div className="flex items-center rounded-md border border-input bg-secondary/40 pl-3 text-sm">
                   <span className="shrink-0 text-muted-foreground">{meta.path}/</span>
                   <input
                     value={form.slug}
-                    onChange={(e) => set({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-") })}
+                    onChange={(e) =>
+                      set({
+                        slug: e.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9-]/g, "-")
+                          .replace(/-+/g, "-"),
+                      })
+                    }
                     className="h-9 min-w-0 flex-1 rounded-r-md bg-white px-2 font-mono outline-none"
                   />
                 </div>
               </Field>
               <Field label="Summary" hint="Shown on cards and under the page title.">
-                <Textarea rows={2} value={form.summary} onChange={(e) => set({ summary: e.target.value })} maxLength={500} />
+                <Textarea
+                  rows={2}
+                  value={form.summary}
+                  onChange={(e) => set({ summary: e.target.value })}
+                  maxLength={500}
+                />
               </Field>
             </div>
           </Panel>
           <Panel title="About" description="Overview, vision, history, facilities…">
-            <RichTextEditor value={form.body} onChange={(body) => set({ body })} folder="departments" />
+            <RichTextEditor
+              value={form.body}
+              onChange={(body) => set({ body })}
+              folder="departments"
+            />
           </Panel>
           {form.kind === "department" && (
             <Panel title="Programmes offered">
@@ -169,7 +249,13 @@ function DepartmentEditor({ department, initial }: { department: Full | null; in
                   <Input
                     value={item}
                     placeholder="e.g. B.Ed. Junior High School Mathematics"
-                    onChange={(e) => set({ programmes: form.programmes.map((p, i) => (i === index ? e.target.value : p)) })}
+                    onChange={(e) =>
+                      set({
+                        programmes: form.programmes.map((p, i) =>
+                          i === index ? e.target.value : p,
+                        ),
+                      })
+                    }
                   />
                 )}
               />
@@ -178,32 +264,129 @@ function DepartmentEditor({ department, initial }: { department: Full | null; in
         </div>
         <div className="flex flex-col gap-6">
           <Panel title="Visibility">
-            <Switch label="Published" description="Show this page on the website." checked={form.isPublished} onChange={(isPublished) => set({ isPublished })} />
+            <Switch
+              label="Published"
+              description="Show this page on the website."
+              checked={form.isPublished}
+              onChange={(isPublished) => set({ isPublished })}
+            />
           </Panel>
           <Panel title="Banner image">
-            <ImageField folder="departments" value={form.imageUrl} onChange={(url) => set({ imageUrl: url ?? "" })} />
+            <ImageField
+              folder="departments"
+              value={form.imageUrl}
+              onChange={(url) => set({ imageUrl: url ?? "" })}
+            />
           </Panel>
           <Panel title={`Head of ${meta.label.toLowerCase()}`}>
             <div className="grid gap-4">
               <div className="grid grid-cols-[96px_1fr] gap-3">
-                <ImageField aspect="square" folder="people" value={form.headPhotoUrl} onChange={(url) => set({ headPhotoUrl: url ?? "" })} />
+                <ImageField
+                  aspect="square"
+                  folder="people"
+                  value={form.headPhotoUrl}
+                  onChange={(url) => set({ headPhotoUrl: url ?? "" })}
+                />
                 <div className="grid content-start gap-2">
-                  <Input value={form.headName} onChange={(e) => set({ headName: e.target.value })} placeholder="Name" />
-                  <Input value={form.headTitle} onChange={(e) => set({ headTitle: e.target.value })} placeholder="Title" />
+                  <Input
+                    value={form.headName}
+                    onChange={(e) => set({ headName: e.target.value })}
+                    placeholder="Name"
+                  />
+                  <Input
+                    value={form.headTitle}
+                    onChange={(e) => set({ headTitle: e.target.value })}
+                    placeholder="Title"
+                  />
                 </div>
               </div>
+            </div>
+          </Panel>
+          <Panel
+            title="Staff directory"
+            description="How this appears in the directory at /directory."
+          >
+            <div className="grid gap-3">
+              <div className="grid grid-cols-[1fr_110px] gap-3">
+                <Field label="Listed under">
+                  <select
+                    value={form.directoryCategory}
+                    onChange={(e) =>
+                      set({ directoryCategory: e.target.value as UnitCategoryValue })
+                    }
+                    className="h-9 rounded-md border border-input bg-white px-3 text-sm"
+                  >
+                    {UNIT_CATEGORIES.map((c) => (
+                      <option key={c.value} value={c.value}>
+                        {c.plural}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Code">
+                  <Input
+                    value={form.code}
+                    onChange={(e) => set({ code: e.target.value.toUpperCase() })}
+                    placeholder="e.g. MCS"
+                    maxLength={20}
+                  />
+                </Field>
+              </div>
+              <Field label="External website">
+                <Input
+                  value={form.websiteUrl}
+                  onChange={(e) => set({ websiteUrl: e.target.value })}
+                  placeholder="https://…"
+                />
+              </Field>
+              <Switch
+                label="Featured"
+                description="Shown under “Featured departments” on the directory home."
+                checked={form.isFeaturedDirectory}
+                onChange={(isFeaturedDirectory) => set({ isFeaturedDirectory })}
+              />
+              {otherUnits.length > 0 && (
+                <Field label="Related units">
+                  <div className="grid max-h-48 gap-1 overflow-y-auto rounded-md border border-input bg-white p-2">
+                    {otherUnits.map((u) => (
+                      <label key={u.id} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={form.relatedIds.includes(u.id)}
+                          onChange={(e) =>
+                            set({
+                              relatedIds: e.target.checked
+                                ? [...form.relatedIds, u.id]
+                                : form.relatedIds.filter((id) => id !== u.id),
+                            })
+                          }
+                        />
+                        {u.name}
+                      </label>
+                    ))}
+                  </div>
+                </Field>
+              )}
             </div>
           </Panel>
           <Panel title="Contact">
             <div className="grid gap-3">
               <Field label="Email">
-                <Input type="email" value={form.email} onChange={(e) => set({ email: e.target.value })} />
+                <Input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => set({ email: e.target.value })}
+                />
               </Field>
               <Field label="Phone">
                 <Input value={form.phone} onChange={(e) => set({ phone: e.target.value })} />
               </Field>
               <Field label="Location">
-                <Input value={form.location} onChange={(e) => set({ location: e.target.value })} placeholder="e.g. Science Block, Room 4" />
+                <Input
+                  value={form.location}
+                  onChange={(e) => set({ location: e.target.value })}
+                  placeholder="e.g. Science Block, Room 4"
+                />
               </Field>
             </div>
           </Panel>

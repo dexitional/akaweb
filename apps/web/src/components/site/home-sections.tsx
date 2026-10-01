@@ -15,7 +15,7 @@ import {
   Wallet,
 } from "lucide-react";
 import type { DepartmentRow, DocumentRow, PageRow } from "@aka/db";
-import { imageSrc, asset } from "#/lib/asset";
+import { asset } from "#/lib/asset";
 import { cn } from "#/lib/utils";
 import { useSiteLayout } from "#/lib/site-layout";
 import type { SiteSettings } from "#/lib/settings";
@@ -26,6 +26,7 @@ import { CoverImage } from "./cover-image";
 import { AnnouncementCard, EventCard, NewsCard } from "./post-cards";
 import { DocumentList } from "./document-list";
 import { Reveal, Stagger, StaggerItem } from "./reveal";
+import { OptimizedImage } from "#/components/site/optimized-image";
 
 const QUICK_ICONS = {
   apply: GraduationCap,
@@ -91,15 +92,21 @@ export function WelcomeSection() {
           />
           <div className="relative overflow-hidden rounded-[2rem] bg-primary shadow-2xl shadow-primary/20">
             {w.photoUrl ? (
-              <img
-                src={imageSrc(w.photoUrl)}
+              <OptimizedImage
+                src={w.photoUrl}
                 alt={w.name}
+                sizes="(min-width: 768px) 448px, 100vw"
                 className="aspect-[4/5] w-full object-cover"
               />
             ) : (
               <div className="flex aspect-[4/5] items-center justify-center bg-gradient-to-br from-primary to-primary-dark">
                 <div className="dot-grid absolute inset-0 opacity-50" aria-hidden="true" />
-                <img src={asset("logo.webp")} alt="" className="relative w-1/2 drop-shadow-xl" />
+                <OptimizedImage
+                  src={asset("logo.webp")}
+                  alt=""
+                  sizes="224px"
+                  className="relative w-1/2 drop-shadow-xl"
+                />
               </div>
             )}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-primary-dark via-primary-dark/80 to-transparent p-6 pt-16 text-white">
@@ -263,6 +270,7 @@ export function AcademicsSection({
               >
                 <CoverImage
                   src={d.image_url}
+                  sizes="(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw"
                   className="absolute inset-0 -z-10"
                   imgClassName="transition-transform duration-700 group-hover:scale-110"
                 />
@@ -434,6 +442,7 @@ export function StudentLifeSection({
               >
                 <CoverImage
                   src={p.hero_image_url}
+                  sizes="(min-width: 1024px) 240px, (min-width: 640px) 40vw, 100vw"
                   className="aspect-[16/9] sm:aspect-auto sm:w-2/5"
                   imgClassName="transition-transform duration-500 group-hover:scale-105"
                 />
@@ -494,9 +503,10 @@ export function CtaBand() {
   return (
     <section className="relative overflow-hidden bg-brand-green py-20 text-white">
       <div className="line-grid absolute inset-0" aria-hidden="true" />
-      <img
+      <OptimizedImage
         src={asset("logo-sm.webp")}
         alt=""
+        sizes="256px"
         className="pointer-events-none absolute -right-10 -bottom-16 h-80 w-auto opacity-10"
         aria-hidden="true"
       />

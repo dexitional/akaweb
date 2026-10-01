@@ -35,7 +35,13 @@ export const usersRoute = new Hono()
     c.json({ user: await service.createUser(c.get("admin").id, c.req.valid("json")) }, 201),
   )
   .patch("/:id", validate("json", updateUserSchema), async (c) =>
-    c.json({ user: await service.updateUser(c.get("admin").id, idParam(c.req.param("id")), c.req.valid("json")) }),
+    c.json({
+      user: await service.updateUser(
+        c.get("admin").id,
+        idParam(c.req.param("id")),
+        c.req.valid("json"),
+      ),
+    }),
   )
   .delete("/:id", async (c) => {
     await service.deleteUser(c.get("admin").id, idParam(c.req.param("id")));

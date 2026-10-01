@@ -1,13 +1,13 @@
 import { BookMarked, Mail, MapPin, Phone } from "lucide-react";
 import type { DepartmentKind, DepartmentRow, PersonRow } from "@aka/db";
 import { DEPARTMENT_KINDS } from "#/lib/content";
-import { imageSrc } from "#/lib/asset";
 import { initials } from "#/lib/format";
 import { cn } from "#/lib/utils";
 import { PageHero } from "./page-hero";
 import { RichContent } from "./rich-content";
 import { PeopleGrid } from "./person-card";
 import { SmartLink } from "./smart-link";
+import { OptimizedImage } from "#/components/site/optimized-image";
 
 export function DepartmentPage({
   kind,
@@ -22,8 +22,16 @@ export function DepartmentPage({
 }) {
   const meta = DEPARTMENT_KINDS[kind];
   const contact = [
-    { icon: Mail, value: department.email, href: department.email ? `mailto:${department.email}` : undefined },
-    { icon: Phone, value: department.phone, href: department.phone ? `tel:${department.phone}` : undefined },
+    {
+      icon: Mail,
+      value: department.email,
+      href: department.email ? `mailto:${department.email}` : undefined,
+    },
+    {
+      icon: Phone,
+      value: department.phone,
+      href: department.phone ? `tel:${department.phone}` : undefined,
+    },
     { icon: MapPin, value: department.location },
   ].filter((c) => c.value);
 
@@ -45,7 +53,9 @@ export function DepartmentPage({
           {department.body ? (
             <RichContent html={department.body} className="prose-lg" />
           ) : (
-            department.summary && <p className="text-lg leading-relaxed text-slate-700">{department.summary}</p>
+            department.summary && (
+              <p className="text-lg leading-relaxed text-slate-700">{department.summary}</p>
+            )
           )}
 
           {department.programmes.length > 0 && (
@@ -53,8 +63,14 @@ export function DepartmentPage({
               <h2 className="mb-5 text-2xl font-extrabold text-primary">Programmes offered</h2>
               <ul className="grid gap-3 sm:grid-cols-2">
                 {department.programmes.map((p) => (
-                  <li key={p} className="flex items-start gap-3 rounded-xl border border-border bg-white p-4">
-                    <BookMarked className="mt-0.5 size-5 shrink-0 text-brand-green" aria-hidden="true" />
+                  <li
+                    key={p}
+                    className="flex items-start gap-3 rounded-xl border border-border bg-white p-4"
+                  >
+                    <BookMarked
+                      className="mt-0.5 size-5 shrink-0 text-brand-green"
+                      aria-hidden="true"
+                    />
                     <span className="font-medium text-slate-800">{p}</span>
                   </li>
                 ))}
@@ -78,7 +94,12 @@ export function DepartmentPage({
               </div>
               <div className="flex items-center gap-4 p-5">
                 {department.head_photo_url ? (
-                  <img src={imageSrc(department.head_photo_url)} alt="" className="size-16 rounded-full object-cover" />
+                  <OptimizedImage
+                    src={department.head_photo_url}
+                    alt=""
+                    sizes="64px"
+                    className="size-16 rounded-full object-cover"
+                  />
                 ) : (
                   <span className="flex size-16 items-center justify-center rounded-full bg-secondary text-lg font-extrabold text-primary">
                     {initials(department.head_name)}
@@ -86,7 +107,9 @@ export function DepartmentPage({
                 )}
                 <div>
                   <p className="font-bold text-slate-900">{department.head_name}</p>
-                  {department.head_title && <p className="text-sm text-muted-foreground">{department.head_title}</p>}
+                  {department.head_title && (
+                    <p className="text-sm text-muted-foreground">{department.head_title}</p>
+                  )}
                 </div>
               </div>
             </div>
@@ -94,12 +117,17 @@ export function DepartmentPage({
 
           {contact.length > 0 && (
             <div className="space-y-3 rounded-2xl border border-border bg-white p-5">
-              <p className="text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">Contact</p>
+              <p className="text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">
+                Contact
+              </p>
               {contact.map((c) => (
                 <p key={String(c.value)} className="flex items-start gap-3 text-sm">
                   <c.icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
                   {c.href ? (
-                    <a href={c.href} className="font-medium break-all text-slate-800 hover:text-primary">
+                    <a
+                      href={c.href}
+                      className="font-medium break-all text-slate-800 hover:text-primary"
+                    >
                       {c.value}
                     </a>
                   ) : (
@@ -112,7 +140,9 @@ export function DepartmentPage({
 
           {siblings.length > 1 && (
             <nav aria-label={meta.plural} className="rounded-2xl bg-secondary p-5">
-              <p className="mb-3 text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">{meta.plural}</p>
+              <p className="mb-3 text-xs font-bold tracking-[0.14em] text-muted-foreground uppercase">
+                {meta.plural}
+              </p>
               <ul className="space-y-0.5">
                 {siblings.map((s) => (
                   <li key={s.slug}>
@@ -120,7 +150,9 @@ export function DepartmentPage({
                       href={`/academics/${kind === "unit" ? "units" : "departments"}/${s.slug}`}
                       className={cn(
                         "block rounded-lg px-3 py-2 text-sm transition-colors",
-                        s.slug === department.slug ? "bg-white font-semibold text-primary shadow-sm" : "text-slate-700 hover:bg-white/60 hover:text-primary",
+                        s.slug === department.slug
+                          ? "bg-white font-semibold text-primary shadow-sm"
+                          : "text-slate-700 hover:bg-white/60 hover:text-primary",
                       )}
                     >
                       {s.name}

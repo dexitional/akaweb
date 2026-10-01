@@ -1,8 +1,9 @@
 import { cn } from "#/lib/utils";
+import { optimizeHtmlImages } from "#/lib/image";
 
 // Renders rich text from the CMS. The HTML is always sanitised on the server
 // (server/api/lib/rich-text.ts) before it reaches the browser — never pass
-// unsanitised HTML here.
+// unsanitised HTML here. Its images get a responsive srcset and lazy loading.
 export function RichContent({ html, className }: { html: string; className?: string }) {
   return (
     <div
@@ -13,7 +14,7 @@ export function RichContent({ html, className }: { html: string; className?: str
         "prose-img:rounded-xl prose-li:marker:text-brand-green prose-table:text-sm prose-th:bg-secondary prose-th:px-3 prose-td:px-3",
         className,
       )}
-      dangerouslySetInnerHTML={{ __html: html }}
+      dangerouslySetInnerHTML={{ __html: optimizeHtmlImages(html) }}
     />
   );
 }

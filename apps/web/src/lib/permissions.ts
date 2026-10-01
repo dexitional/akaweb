@@ -16,6 +16,7 @@ export type AdminModule =
   | "posts"
   | "departments"
   | "people"
+  | "directory"
   | "documents"
   | "media"
   | "messages"
@@ -32,6 +33,7 @@ const ALL_MODULES: Array<AdminModule> = [
   "posts",
   "departments",
   "people",
+  "directory",
   "documents",
   "media",
   "messages",
@@ -47,6 +49,7 @@ const CONTENT: Partial<Record<AdminModule, Access>> = {
   posts: "manage",
   departments: "manage",
   people: "manage",
+  directory: "manage",
   documents: "manage",
   media: "manage",
 };
@@ -79,7 +82,8 @@ export function accessTo(role: AdminRole, module: AdminModule): Access | null {
 }
 
 export const canView = (role: AdminRole, module: AdminModule) => accessTo(role, module) !== null;
-export const canManage = (role: AdminRole, module: AdminModule) => accessTo(role, module) === "manage";
+export const canManage = (role: AdminRole, module: AdminModule) =>
+  accessTo(role, module) === "manage";
 
 export function rolesWith(module: AdminModule, level: Access): Array<AdminRole> {
   return (Object.keys(PERMISSIONS) as Array<AdminRole>).filter((role) =>
@@ -101,6 +105,7 @@ export const MODULE_PATHS: Array<[AdminModule, string]> = [
   ["posts", "/admin/posts"],
   ["departments", "/admin/departments"],
   ["people", "/admin/people"],
+  ["directory", "/admin/directory"],
   ["documents", "/admin/documents"],
   ["media", "/admin/media"],
   ["messages", "/admin/messages"],

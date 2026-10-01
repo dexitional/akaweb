@@ -19,7 +19,18 @@ interface Entry {
   admin_name: string | null;
 }
 
-const ENTITIES = ["page", "post", "spotlight", "department", "person", "document", "media", "settings", "user", "session"];
+const ENTITIES = [
+  "page",
+  "post",
+  "spotlight",
+  "department",
+  "person",
+  "document",
+  "media",
+  "settings",
+  "user",
+  "session",
+];
 const ACTION_STYLES: Record<string, string> = {
   created: "bg-emerald-50 text-emerald-700",
   published: "bg-sky-50 text-sky-700",
@@ -36,7 +47,12 @@ function ActivityPage() {
   const [page, setPage] = useState(1);
   const { data, isLoading } = useQuery({
     queryKey: ["activity", { entity, page }],
-    queryFn: () => api.get<{ items: Array<Entry>; total: number }>("/activity", { entity: entity || undefined, page, pageSize: PAGE_SIZE }),
+    queryFn: () =>
+      api.get<{ items: Array<Entry>; total: number }>("/activity", {
+        entity: entity || undefined,
+        page,
+        pageSize: PAGE_SIZE,
+      }),
     placeholderData: keepPreviousData,
   });
   return (
@@ -66,10 +82,18 @@ function ActivityPage() {
       <div className="overflow-hidden rounded-xl border border-border bg-white">
         <ul className="divide-y divide-border">
           {(data?.items ?? []).map((e) => (
-            <li key={e.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-6 py-3 text-sm">
-              <span className={`w-24 shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold capitalize ${ACTION_STYLES[e.action] ?? ""}`}>{e.action.replace("_", " ")}</span>
+            <li
+              key={e.id}
+              className="flex flex-wrap items-center gap-x-4 gap-y-1 px-6 py-3 text-sm"
+            >
+              <span
+                className={`w-24 shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold capitalize ${ACTION_STYLES[e.action] ?? ""}`}
+              >
+                {e.action.replace("_", " ")}
+              </span>
               <span className="min-w-0 flex-1">
-                <span className="font-semibold">{e.admin_name ?? "Deleted user"}</span> <span className="text-muted-foreground">— {e.summary}</span>
+                <span className="font-semibold">{e.admin_name ?? "Deleted user"}</span>{" "}
+                <span className="text-muted-foreground">— {e.summary}</span>
               </span>
               <span className="text-xs text-muted-foreground" title={formatDateTime(e.created_at)}>
                 {timeAgo(e.created_at)}
@@ -78,8 +102,15 @@ function ActivityPage() {
           ))}
         </ul>
         {isLoading && <TableMessage>Loading…</TableMessage>}
-        {!isLoading && data?.items.length === 0 && <TableMessage>No activity recorded.</TableMessage>}
-        <Pagination page={page} pageSize={PAGE_SIZE} total={data?.total ?? 0} onPageChange={setPage} />
+        {!isLoading && data?.items.length === 0 && (
+          <TableMessage>No activity recorded.</TableMessage>
+        )}
+        <Pagination
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={data?.total ?? 0}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );

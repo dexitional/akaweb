@@ -65,6 +65,12 @@ Every image and document uploaded in the CMS goes straight from the browser to R
 [{ "AllowedOrigins": ["https://your-site", "http://localhost:3000"], "AllowedMethods": ["PUT"], "AllowedHeaders": ["content-type", "content-length"], "MaxAgeSeconds": 3600 }]
 ```
 
+### Image optimisation
+
+Images on the site go through `/img?src=…&w=…&q=…` (`src/server/image-optimizer.ts`, mounted as a Nitro handler in `vite.config.ts`). It reads the original straight from R2 (or `public/`), resizes it to one of a fixed set of widths, encodes it as AVIF or WebP (whichever the browser accepts, with JPEG/PNG as a fallback) and caches the result in memory and on disk. CMS uploads have unique keys, so their variants are served with `Cache-Control: immutable` for a year, and any CDN in front of the site can keep them. Files in `public/` are cached for a week. SVGs and GIFs pass through unchanged, and if anything fails the request redirects to the original file, so an image never breaks.
+
+In components, use `<OptimizedImage src sizes="…">` (`src/components/site/optimized-image.tsx`) with a `sizes` value that matches how wide the image renders. Add `priority` for the hero/LCP image, which preloads it from `<head>`. Rich text gets a `srcset` automatically. On the home page, image weight drops from about 6.3 MB to about 0.6 MB on desktop (1.1 MB on a 3× phone). Settings are listed at the end of `apps/web/.env.example`. In production, keep `IMAGE_CACHE_DIR` on persistent storage so variants survive deploys.
+
 ## The CMS
 
 | Area | What editors manage |
@@ -102,6 +108,24 @@ Every image and document uploaded in the CMS goes straight from the browser to R
 | `/news`, `/events`, `/announcements` (+ `/{slug}`) | Searchable, filterable listings and detail pages |
 | `/downloads` | Guides & Downloads |
 | `/search` | Site-wide search |
+| `/directory` | Staff directory home (most viewed, new faces, browse by type/expertise) |
+| `/directory/search?q=…` / `?initial=A` | Directory search and A–Z browse |
+| `/directory/p/{slug}` | Staff profile (counts a view) |
+| `/directory/d/{slug}`, `/directory/d/list/{category}` | Unit staff list; all units of a category |
+| `/directory/contacts`, `/directory/most-visited-profiles` | Contacts; ranked profiles by period |
+
+### Staff directory
+
+Ported from the my-clone directory system. A directory **profile** is one person: every `people`
+row (in the Management, Principal's Office, Governing Council or Staff groups) that shares a
+`profile_slug` is an affiliation of that profile, so someone listed under two units appears once.
+Type, status, photo override and the academic profile (expertise, education, career, publications,
+projects, conferences, honours) live in `staff_profiles` and are edited in **Admin → Staff
+Directory**; names and positions stay in **People**. Unit category, code, website, featured flag
+and related units are set on each department/unit, and the expertise topics and listing-request
+email in **Settings → Staff directory**. Views, co-views ("frequently viewed together") and shares
+are recorded per day for the rankings. After importing new staff in bulk, run
+`npm run directory:backfill -w apps/web` (idempotent) to link profiles and leadership roles.
 
 ## Conventions
 

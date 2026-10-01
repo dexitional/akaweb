@@ -4,11 +4,18 @@ import { getPool } from "@aka/db";
 import type { PersonRow } from "@aka/db";
 import type { RowDataPacket } from "mysql2";
 import { requirePermission } from "../../middleware/require-auth.js";
-import { optionalField, optionalText, optionalUrl, reorderSchema } from "../../lib/fields.js";
+import {
+  optionalField,
+  optionalText,
+  optionalUrl,
+  reorderSchema,
+  slugSchema,
+} from "../../lib/fields.js";
 import { deleteRow, findById, insertRow, reorderRows, updateRow } from "../../lib/columns.js";
 import { idParam } from "../../lib/query.js";
 import { logActivity } from "../../lib/activity.js";
 import { PERSON_GROUP_KEYS } from "#/lib/content";
+import { DIRECTORY_GROUPS, personSlug } from "#/lib/directory";
 import { validate } from "../../lib/validate.js";
 
 const fields = z.object({
@@ -20,6 +27,8 @@ const fields = z.object({
   bio: optionalText(4000),
   email: optionalField(z.string().trim().email().max(150)),
   phone: optionalText(30),
+  profileSlug: optionalField(slugSchema),
+  unitRole: optionalText(120),
   isActive: z.boolean().optional(),
   sortOrder: z.number().int().min(0).max(9999).optional(),
 });
@@ -33,9 +42,22 @@ const FIELDS = {
   bio: "bio",
   email: "email",
   phone: "phone",
+  profileSlug: "profile_slug",
+  unitRole: "unit_role",
   isActive: "is_active",
   sortOrder: "sort_order",
 };
+
+// Staff get a directory profile: link the row to one (same slug = same person
+// across groups and units) and make sure the profile exists.
+async function linkDirectoryProfile(id: number) {
+  const person = await get(id);
+  if (!DIRECTORY_GROUPS.includes(person.group_key)) return;
+  const slug = person.profile_slug ?? personSlug(person.name);
+  if (!person.profile_slug)
+    await getPool().execute("UPDATE people SET profile_slug = ? WHERE id = ?", [slug, id]);
+  await getPool().execute("INSERT IGNORE INTO staff_profiles (slug) VALUES (?)", [slug]);
+}
 
 const get = (id: number) => findById<PersonRow>("people", id, "Person");
 
@@ -54,7 +76,12 @@ export const peopleRoute = new Hono()
       "SELECT COALESCE(MAX(sort_order), -1) + 1 AS next FROM people WHERE group_key = ?",
       [input.groupKey],
     );
-    const id = await insertRow("people", { sortOrder: Number(rows[0]?.next ?? 0), ...input }, FIELDS);
+    const id = await insertRow(
+      "people",
+      { sortOrder: Number(rows[0]?.next ?? 0), ...input },
+      FIELDS,
+    );
+    await linkDirectoryProfile(id);
     logActivity(c.get("admin").id, "created", "person", id, `Added ${input.name}`);
     return c.json({ person: await get(id) }, 201);
   })
@@ -66,7 +93,14 @@ export const peopleRoute = new Hono()
     const id = idParam(c.req.param("id"));
     const current = await get(id);
     await updateRow("people", id, c.req.valid("json"), FIELDS);
-    logActivity(c.get("admin").id, "updated", "person", id, `Updated ${c.req.valid("json").name ?? current.name}`);
+    await linkDirectoryProfile(id);
+    logActivity(
+      c.get("admin").id,
+      "updated",
+      "person",
+      id,
+      `Updated ${c.req.valid("json").name ?? current.name}`,
+    );
     return c.json({ person: await get(id) });
   })
   .delete("/:id", async (c) => {
