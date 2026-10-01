@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS departments (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  kind ENUM('department', 'unit') NOT NULL,
+  slug VARCHAR(160) NOT NULL,
+  name VARCHAR(200) NOT NULL,
+  summary VARCHAR(500) NULL,
+  body MEDIUMTEXT NULL,
+  image_url VARCHAR(700) NULL,
+  head_name VARCHAR(150) NULL,
+  head_title VARCHAR(150) NULL,
+  head_photo_url VARCHAR(700) NULL,
+  email VARCHAR(150) NULL,
+  phone VARCHAR(30) NULL,
+  location VARCHAR(255) NULL,
+  programmes JSON NULL,
+  is_published TINYINT(1) NOT NULL DEFAULT 1,
+  sort_order INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_departments_kind_slug (kind, slug),
+  KEY idx_departments_kind (kind, is_published, sort_order)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

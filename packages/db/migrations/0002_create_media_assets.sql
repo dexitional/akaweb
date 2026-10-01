@@ -1,0 +1,19 @@
+CREATE TABLE IF NOT EXISTS media_assets (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  file_key VARCHAR(500) NOT NULL,
+  url VARCHAR(700) NOT NULL,
+  filename VARCHAR(255) NOT NULL,
+  mime_type VARCHAR(120) NOT NULL,
+  size_bytes INT UNSIGNED NOT NULL DEFAULT 0,
+  width INT UNSIGNED NULL,
+  height INT UNSIGNED NULL,
+  alt_text VARCHAR(255) NULL,
+  folder VARCHAR(60) NOT NULL DEFAULT 'general',
+  uploaded_by INT UNSIGNED NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_media_assets_key (file_key),
+  KEY idx_media_assets_folder (folder, created_at),
+  CONSTRAINT fk_media_assets_uploaded_by FOREIGN KEY (uploaded_by) REFERENCES admins (id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

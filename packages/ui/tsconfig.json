@@ -1,0 +1,9 @@
+{
+  "extends": "@aka/tsconfig/react-app.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": []
+  },
+  "include": ["src"]
+}

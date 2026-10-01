@@ -1,0 +1,18 @@
+CREATE TABLE IF NOT EXISTS people (
+  id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  group_key VARCHAR(40) NOT NULL,
+  name VARCHAR(150) NOT NULL,
+  title VARCHAR(150) NOT NULL,
+  department_id INT UNSIGNED NULL,
+  photo_url VARCHAR(700) NULL,
+  bio TEXT NULL,
+  email VARCHAR(150) NULL,
+  phone VARCHAR(30) NULL,
+  sort_order INT NOT NULL DEFAULT 0,
+  is_active TINYINT(1) NOT NULL DEFAULT 1,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_people_group (group_key, is_active, sort_order),
+  CONSTRAINT fk_people_department FOREIGN KEY (department_id) REFERENCES departments (id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

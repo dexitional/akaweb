@@ -1,0 +1,1 @@
+ALTER TABLE spotlights ADD COLUMN show_text TINYINT(1) NOT NULL DEFAULT 1 AFTER cta_url;

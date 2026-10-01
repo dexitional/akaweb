@@ -1,0 +1,55 @@
+/* Must precede @import "tailwindcss" — anything after it is no longer at the
+   top of the stylesheet, which is invalid CSS and gets silently dropped. */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap");
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Tailwind v4 only scans this app's src/ — also scan the shared UI package. */
+@source "../../../packages/ui/src";
+@import "@aka/ui/tokens.css";
+@import "tw-animate-css";
+
+html,
+body {
+  min-height: 100%;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  /* Faint dot grid used on navy bands. */
+  .dot-grid {
+    background-image: radial-gradient(circle, rgb(255 255 255 / 0.14) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+  .line-grid {
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.05) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+}
+
+/* Tiptap placeholder (admin editor). */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: var(--muted-foreground);
+}
