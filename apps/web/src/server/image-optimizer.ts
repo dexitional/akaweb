@@ -10,7 +10,7 @@ import { createHash } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
-import { DEFAULT_QUALITY, IMAGE_QUALITIES, IMAGE_WIDTHS } from "#/lib/image";
+import { DEFAULT_QUALITY, IMAGE_QUALITIES, IMAGE_WIDTHS, parseImageHosts } from "#/lib/image";
 
 type Format = "avif" | "webp" | "jpeg" | "png";
 
@@ -31,22 +31,8 @@ const IMMUTABLE = "public, max-age=31536000, immutable";
 const WEEK = "public, max-age=604800, stale-while-revalidate=86400";
 
 // Hosts we're willing to fetch from: the R2 public domain, plus any extras.
-function allowedHosts(): Set<string> {
-  const hosts = new Set<string>();
-  for (const value of [
-    process.env.R2_PUBLIC_DOMAIN,
-    ...(process.env.IMAGE_REMOTE_HOSTS ?? "").split(","),
-  ]) {
-    const v = value?.trim();
-    if (!v) continue;
-    try {
-      hosts.add(new URL(v.includes("://") ? v : `https://${v}`).host);
-    } catch {
-      // Ignore malformed entries.
-    }
-  }
-  return hosts;
-}
+const allowedHosts = () =>
+  new Set(parseImageHosts(process.env.R2_PUBLIC_DOMAIN, process.env.IMAGE_REMOTE_HOSTS));
 
 // ---- Caches -------------------------------------------------------------------------
 

@@ -8,6 +8,7 @@ import { AppError } from "../../middleware/error-handler.js";
 import { deleteRow, findById, insertRow, updateRow } from "../../lib/columns.js";
 import { slugify, uniqueSlug } from "../../lib/slug.js";
 import { logActivity } from "../../lib/activity.js";
+import { notifyPostPublished } from "../../lib/push.js";
 import { likePattern, paging } from "../../lib/query.js";
 import { toRichHtml } from "../../lib/rich-text.js";
 import { postProblems } from "./route.js";
@@ -139,6 +140,9 @@ export async function createPost(admin: AdminSessionUser, input: z.infer<typeof 
     id,
     `Created ${LABELS[input.type]} “${input.title}”`,
   );
+  // Notify app users once it's live (scheduled posts are picked up by the
+  // push sweeper when their published_at arrives). Never blocks the save.
+  if (status === "published") void notifyPostPublished(id).catch((err) => console.error("push:", err));
   return getPost(id);
 }
 
@@ -175,6 +179,7 @@ export async function updatePost(
     id,
     `${publishing ? "Published" : "Updated"} ${LABELS[current.type]} “${input.title ?? current.title}”`,
   );
+  if (publishing) void notifyPostPublished(id).catch((err) => console.error("push:", err));
   return getPost(id);
 }
 

@@ -18,11 +18,47 @@ export type ImageQuality = (typeof IMAGE_QUALITIES)[number];
 const env = import.meta.env as Partial<ImportMetaEnv> | undefined;
 const enabled = env?.VITE_IMAGE_OPTIMIZATION !== "false";
 
-/** Vector and animated images are served as they are. */
+/**
+ * Hosts the optimiser may fetch from: R2_PUBLIC_DOMAIN plus the comma-separated
+ * IMAGE_REMOTE_HOSTS. Entries may be bare hosts or URLs; matching is on the
+ * exact host (including any port). Used by the server and, via the
+ * build-time __IMAGE_HOSTS__ constant (vite.config.ts), by the browser.
+ */
+export function parseImageHosts(
+  r2PublicDomain: string | undefined,
+  remoteHosts: string | undefined,
+): Array<string> {
+  const hosts = new Set<string>();
+  for (const value of [r2PublicDomain, ...(remoteHosts ?? "").split(",")]) {
+    const v = value?.trim();
+    if (!v) continue;
+    try {
+      hosts.add(new URL(v.includes("://") ? v : `https://${v}`).host);
+    } catch {
+      // Ignore malformed entries.
+    }
+  }
+  return [...hosts];
+}
+
+// Undefined outside a Vite build (e.g. tsx scripts) — then no remote host is optimised.
+const IMAGE_HOSTS = new Set<string>(typeof __IMAGE_HOSTS__ === "undefined" ? [] : __IMAGE_HOSTS__);
+
+/**
+ * Local files and images on an allowed host go through /img. Anything else
+ * (an image pasted from another site) loads directly, so it never breaks.
+ * Vector and animated images are always served as they are.
+ */
 export function canOptimize(src: string | null | undefined): src is string {
   if (!enabled || !src) return false;
-  if (!/^(https?:\/\/|\/(?!\/))/i.test(src)) return false;
-  return !/\.(svg|gif)(\?|#|$)/i.test(src);
+  if (/\.(svg|gif)(\?|#|$)/i.test(src)) return false;
+  if (/^\/(?!\/)/.test(src)) return true;
+  if (!/^https?:\/\//i.test(src)) return false;
+  try {
+    return IMAGE_HOSTS.has(new URL(src).host);
+  } catch {
+    return false;
+  }
 }
 
 export function snapWidth(width: number): number {

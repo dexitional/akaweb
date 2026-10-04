@@ -2,7 +2,7 @@
 //
 // First time, on your machine (needs SSH access to the server):
 //   pm2 deploy ecosystem.config.cjs production setup     # clones the repo on the server
-//   scp apps/web/.env.production akaweb@SERVER:/var/www/akaweb/shared/.env
+//   scp apps/web/.env.production akaweb@SERVER:/var/www/html/akaweb/shared/.env
 //   pm2 deploy ecosystem.config.cjs production           # build + start
 //
 // Every release after that:
@@ -13,18 +13,30 @@
 //   pm2 startup && pm2 save                               # start on boot (once)
 //   pm2 install pm2-logrotate                             # keep logs bounded (once)
 //
-// Layout created on the server by `pm2 deploy`:
-//   /var/www/akaweb/current            the live release (git checkout)
-//   /var/www/akaweb/shared/.env        secrets, linked into apps/web/.env
-//   /var/www/akaweb/shared/image-cache optimised image variants (IMAGE_CACHE_DIR), kept across releases
-//   /var/www/akaweb/shared/logs        PM2 logs
+// Works with either server layout:
+//   a) `pm2 deploy` (below):  /var/www/html/akaweb/current = the release,
+//                              /var/www/html/akaweb/shared  = .env, image-cache/, logs/
+//   b) a plain `git clone` at /var/www/html/akaweb: start it there with
+//      `pm2 start ecosystem.config.cjs`; image-cache/ and logs/ go in .shared/
+//      (gitignored) and .env stays in apps/web/.env.
 const fs = require("node:fs");
 const path = require("node:path");
 const { parseEnv } = require("node:util");
 
-const ROOT = "/var/www/akaweb";
-const SHARED = `${ROOT}/shared`;
+const ROOT = "/var/www/html/akaweb";
 const APP_DIR = path.join(__dirname, "apps/web");
+// pm2 deploy checks the repo out to <ROOT>/source and links <ROOT>/current to it.
+const IS_RELEASE = ["current", "source"].includes(path.basename(__dirname));
+const SHARED = IS_RELEASE ? path.join(__dirname, "..", "shared") : path.join(__dirname, ".shared");
+
+// PM2 won't start the app if its log folder is missing.
+for (const dir of [`${SHARED}/logs`, `${SHARED}/image-cache`]) {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch {
+    // Not on the server (or no permission) — PM2 reports it if it matters.
+  }
+}
 
 // Nitro's production server doesn't read .env itself, so load it here. This
 // works the same in fork and cluster mode. After editing .env on the server,
@@ -77,21 +89,21 @@ module.exports = {
 
   deploy: {
     production: {
-      user: "akaweb", // the account the app runs as; it owns /var/www/akaweb
+      user: "akaweb", // the account the app runs as; it owns /var/www/html/akaweb
       host: ["YOUR_SERVER_IP"],
       ref: "origin/master",
       repo: "https://github.com/dexitional/akaweb.git", // use git@github.com:… if the repo is private
       path: ROOT,
       ssh_options: "StrictHostKeyChecking=accept-new",
 
-      "pre-setup": `mkdir -p ${SHARED}/image-cache ${SHARED}/logs`,
+      "pre-setup": `mkdir -p ${ROOT}/shared/image-cache ${ROOT}/shared/logs`,
 
-      // Runs in /var/www/akaweb/current after each pull.
+      // Runs in /var/www/html/akaweb/current after each pull.
       "post-deploy": [
-        `ln -sfn ${SHARED}/.env apps/web/.env`,
+        `ln -sfn ${ROOT}/shared/.env apps/web/.env`,
         "npm ci --include=dev", // the build needs Vite and the other devDependencies
         // Load .env for the build (VITE_* values are baked in) and migrations.
-        `set -a && . ${SHARED}/.env && set +a`,
+        `set -a && . ${ROOT}/shared/.env && set +a`,
         "npm run build",
         "npm run db:migrate",
         "pm2 reload ecosystem.config.cjs --update-env",

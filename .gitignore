@@ -16,3 +16,6 @@ build/
 
 # Optimised image variants (apps/web/.cache/images)
 .cache/
+
+# PM2 logs + image cache when the repo is cloned straight onto the server
+.shared/
