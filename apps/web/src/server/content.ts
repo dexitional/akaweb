@@ -431,3 +431,34 @@ export async function search(term: string): Promise<Array<SearchResult>> {
     })),
   ];
 }
+
+// ---- Mobile app ------------------------------------------------------------
+
+// Store links come from settings; a site-path APK (e.g. /apps/akatsico.apk)
+// is only offered when the file is actually deployed, with its size and date.
+export async function getMobileApp() {
+  const settings = await getAllSettings();
+  const app = settings.mobileApp;
+  let apk: { url: string; sizeBytes: number | null; updatedAt: string | null } | null = null;
+  if (/^https?:\/\//i.test(app.apkUrl)) {
+    apk = { url: app.apkUrl, sizeBytes: null, updatedAt: null };
+  } else if (app.apkUrl.startsWith("/") && !app.apkUrl.includes("..")) {
+    const { stat } = await import("node:fs/promises");
+    const { join } = await import("node:path");
+    const rel = decodeURIComponent(app.apkUrl.split(/[?#]/)[0] ?? "");
+    // dev serves public/, a production build serves .output/public/
+    for (const root of [join(process.cwd(), "public"), join(process.cwd(), ".output", "public")]) {
+      const info = await stat(join(root, rel)).catch(() => null);
+      if (info?.isFile()) {
+        apk = { url: app.apkUrl, sizeBytes: info.size, updatedAt: info.mtime.toISOString() };
+        break;
+      }
+    }
+  }
+  return {
+    app,
+    apk,
+    collegeName: settings.identity.name,
+    contact: { email: app.supportEmail || settings.contact.email, phone: settings.contact.phone, address: settings.contact.postalAddress },
+  };
+}

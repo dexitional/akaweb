@@ -19,3 +19,6 @@ build/
 
 # PM2 logs + image cache when the repo is cloned straight onto the server
 .shared/
+
+# Android APK for /mobile direct download -- deployed to the server, not committed
+apps/web/public/apps/*.apk

@@ -104,3 +104,8 @@ export const searchSite = createServerFn({ method: "GET" })
     const { search } = await import("./content.js");
     return search(data.q);
   });
+
+export const getMobileAppData = createServerFn({ method: "GET" }).handler(async () => {
+  const { getMobileApp } = await import("./content.js");
+  return getMobileApp();
+});

@@ -11,6 +11,7 @@ import {
   LibraryBig,
   Mail,
   Newspaper,
+  Smartphone,
   UserRound,
   Wallet,
 } from "lucide-react";
@@ -38,6 +39,7 @@ const QUICK_ICONS = {
   fees: Wallet,
   news: Newspaper,
   contact: Mail,
+  mobile: Smartphone,
 } as const;
 
 export function QuickLinksBar() {

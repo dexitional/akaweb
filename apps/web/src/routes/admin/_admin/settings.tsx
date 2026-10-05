@@ -26,6 +26,7 @@ const TABS = [
   { key: "notice", label: "Notice banner" },
   { key: "sections", label: "Section intros" },
   { key: "directory", label: "Staff directory" },
+  { key: "mobile", label: "Mobile app" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -83,6 +84,8 @@ function SettingsPage() {
             <NoticeCard value={data.notice} />
           ) : tab === "directory" ? (
             <DirectoryCard value={data.directory} />
+          ) : tab === "mobile" ? (
+            <MobileAppCard value={data.mobileApp} />
           ) : (
             <SectionsCard value={data.sections} />
           )}
@@ -180,6 +183,55 @@ function DirectoryCard({ value }: { value: SiteSettings["directory"] }) {
           </Field>
         </div>
       </div>
+      {footer}
+    </Panel>
+  );
+}
+
+function MobileAppCard({ value }: { value: SiteSettings["mobileApp"] }) {
+  const { form, set, footer } = useSettingForm("mobileApp", value);
+  return (
+    <Panel
+      title="Student mobile app"
+      description="Shown on the app download page at /mobile. Leave a store link empty to show “Coming soon”."
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="App name">
+          <Input value={form.name} onChange={(e) => set({ name: e.target.value })} />
+        </Field>
+        <Field label="Support email" hint="For app questions. Empty uses the college email.">
+          <Input
+            type="email"
+            value={form.supportEmail}
+            onChange={(e) => set({ supportEmail: e.target.value })}
+          />
+        </Field>
+        <Field label="Tagline" className="sm:col-span-2">
+          <Textarea rows={2} value={form.tagline} onChange={(e) => set({ tagline: e.target.value })} />
+        </Field>
+        <LinkField
+          label="Google Play link"
+          value={form.playStoreUrl}
+          onChange={(playStoreUrl) => set({ playStoreUrl })}
+        />
+        <LinkField
+          label="App Store link"
+          value={form.appStoreUrl}
+          onChange={(appStoreUrl) => set({ appStoreUrl })}
+        />
+        <LinkField
+          label="Android APK download"
+          value={form.apkUrl}
+          onChange={(apkUrl) => set({ apkUrl })}
+        />
+        <Field label="APK version" hint="Shown next to the direct download, e.g. 1.0.0.">
+          <Input value={form.apkVersion} onChange={(e) => set({ apkVersion: e.target.value })} />
+        </Field>
+      </div>
+      <p className="mt-3 text-xs text-muted-foreground">
+        The direct download is the file at <code>apps/web/public/apps/akatsico.apk</code> on the web
+        server (or a full URL). It is hidden automatically when the file isn&apos;t there.
+      </p>
       {footer}
     </Panel>
   );

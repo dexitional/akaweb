@@ -26,6 +26,7 @@ export const QUICK_LINK_ICONS = [
   "fees",
   "news",
   "contact",
+  "mobile",
 ] as const;
 
 export const SOCIAL_PLATFORMS = [
@@ -120,6 +121,17 @@ export const settingsSchemas = {
     listingEmail: text(150),
     listingRecipients: text(200),
   }),
+  // Student mobile app (Akatsico): store links and the direct APK download,
+  // shown on /mobile. Empty store URLs show "Coming soon".
+  mobileApp: z.object({
+    name: text(40).min(1),
+    tagline: text(200),
+    playStoreUrl: link,
+    appStoreUrl: link,
+    apkUrl: link,
+    apkVersion: text(30),
+    supportEmail: text(150),
+  }),
   sections: z.object(
     Object.fromEntries(
       (["about", "academics", "admissions", "student-life", "alumni"] as const).map((s) => [
@@ -201,6 +213,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
         highlight: false,
       },
       { label: "Downloads", url: "/downloads", icon: "download", highlight: false },
+      { label: "Student Mobile App", url: "/mobile", icon: "mobile", highlight: false },
     ],
   },
   cta: {
@@ -216,6 +229,16 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     expertiseTags: [],
     listingEmail: "",
     listingRecipients: "the Registry, with the ICT Unit copied",
+  },
+  mobileApp: {
+    name: "Akatsico",
+    tagline:
+      "Your results, course registration, fees, circulars and campus news — in one app for students of Akatsi College of Education.",
+    playStoreUrl: "",
+    appStoreUrl: "",
+    apkUrl: "/apps/akatsico.apk",
+    apkVersion: "",
+    supportEmail: "",
   },
   sections: {
     about: { intro: "", imageUrl: "" },

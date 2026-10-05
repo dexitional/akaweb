@@ -28,6 +28,7 @@ export function SiteFooter() {
         { label: "Guides & Downloads", href: "/downloads" },
         { label: "Staff Directory", href: "/directory" },
         { label: "Alumni", href: "/alumni" },
+        { label: "Student Mobile App", href: "/mobile" },
       ],
     },
   ];
@@ -142,6 +143,12 @@ export function SiteFooter() {
             </Link>
             <Link to="/downloads" className="hover:text-white">
               Downloads
+            </Link>
+            <Link to="/mobile/privacy" className="hover:text-white">
+              App Privacy
+            </Link>
+            <Link to="/mobile/terms" className="hover:text-white">
+              App Terms
             </Link>
             <Link to="/admin/login" className="hover:text-white">
               Staff login
